@@ -1,0 +1,64 @@
+import clr, sys, os
+
+import sg_settings as SG
+from sg_settings import *
+
+clr.AddReference("System.Core")
+import System
+
+######## CHANGE TO ARGS
+ASSEMBLY_NAME = "Eto"
+########
+
+sys.path.append(os.getcwd() + SG.ASSEMBLIES_PATH)
+
+if (not clr.IsNetCoreApp):
+    print(SG.dotnet_platform)
+    sys.exit()
+    
+try:
+    clr.AddReference(ASSEMBLY_NAME)
+except IOError:
+    e = sys.exc_info()[0]
+    print(SG.dependencies)
+    print("\t\t\t" + ASSEMBLY_NAME, "from ", SG.ASSEMBLIES_PATH + "/" + ASSEMBLY_NAME + ".dll")
+    sys.exit()
+
+assembly_name = ASSEMBLY_NAME
+assembly = None # 'Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
+asm_module = None # 'Eto.dll'
+asm_clases = []
+asm_namespaces = []
+initpy = []
+
+for i in clr.References:
+    if i.GetName().Name == assembly_name:
+        assembly = i
+        _x = assembly.GetModules()
+        for j in _x:
+            if j.ToString().startswith(assembly_name):
+                asm_module = j
+                break
+        break
+    
+_ns = []
+for i in asm_module.GetTypes():
+    if i.FullName.startswith(assembly_name):
+        asm_clases.append(i)
+        _ns.append(i.FullName.rsplit('.', 1)[0])
+asm_namespaces = list(set(_ns))
+
+for i in asm_namespaces:
+    System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + i.replace('.', "\\"))
+    initpy.append(System.IO.File.Create(os.getcwd() + STUBS_PATH + "\\" + i.replace('.', "\\") + "\\__init__.py"))
+
+for i in asm_module.GetTypes():
+  try:
+    _ret = i.BaseType.ToString().replace('.', "") if i.BaseType is not None else ""
+    print(class_template.substitute(class_name = i.Name, 
+                                class_body = '',
+                                class_base_type = _ret).strip())
+  except e:
+      print("ERROR:" + e) 
+
+print(asm_module)      
