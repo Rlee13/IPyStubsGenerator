@@ -18,8 +18,7 @@ if (not clr.IsNetCoreApp):
     
 try:
     clr.AddReference(ASSEMBLY_NAME)
-except IOError:
-    e = sys.exc_info()[0]
+except e:
     print(SG.dependencies)
     print("\t\t\t" + ASSEMBLY_NAME, "from ", SG.ASSEMBLIES_PATH + "/" + ASSEMBLY_NAME + ".dll")
     sys.exit()
@@ -40,25 +39,38 @@ for i in clr.References:
                 asm_module = j
                 break
         break
-    
-_ns = []
+
+_ret = []
 for i in asm_module.GetTypes():
     if i.FullName.startswith(assembly_name):
-        asm_clases.append(i)
-        _ns.append(i.FullName.rsplit('.', 1)[0])
-asm_namespaces = list(set(_ns))
+        for j in i.GetProperties():
+            # if not i.IsDefined(type(System.Runtime.CompilerServices.CompilerGeneratedAttribute), False):
+            _attr = j.GetCustomAttributes(True)
+            for k in _attr:
+                if type(k) is not type(System.Runtime.CompilerServices.CompilerGeneratedAttribute):
+                    asm_clases.append(i)
+                    _ret.append(i.FullName.rsplit('.', 1)[0])
+asm_namespaces = list(set(_ret))
 
-for i in asm_namespaces:
-    System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + i.replace('.', "\\"))
-    initpy.append(System.IO.File.Create(os.getcwd() + STUBS_PATH + "\\" + i.replace('.', "\\") + "\\__init__.py"))
+for ns in asm_namespaces:
+    print(f"[INFO:] Process namespace: {ns}")
+    try:
+        System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
+        _ret = System.IO.File.Create(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py")
+    except Exception as e:
+        print("[IO ERROR:]" + e)
+        sys.exit()
 
-for i in asm_module.GetTypes():
-  try:
-    _ret = i.BaseType.ToString().replace('.', "") if i.BaseType is not None else ""
-    print(class_template.substitute(class_name = i.Name, 
-                                class_body = '',
-                                class_base_type = _ret).strip())
-  except e:
-      print("ERROR:" + e) 
+    initpy.append(_ret)
 
-print(asm_module)      
+    for i in asm_clases:
+        # print(i)
+        try:
+            _ret = i.BaseType.ToString().replace('.', "") if i.BaseType is not None else ""
+        except Exception as e:
+            print(f"[ERROR]: {e}")
+            sys.exit()
+
+        print(class_template.substitute(class_name = i.Name, 
+                            class_body = '',
+                            class_base_type = _ret).strip())
