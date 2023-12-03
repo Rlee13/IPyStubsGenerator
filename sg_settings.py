@@ -5,7 +5,7 @@ STUBS_PATH = "/Stubs"
 
 class_template = Template(''' 
 class $class_name($class_base_type):
-    $class_body
+  $class_body
 ''')
 
 method_template = Template(''' 

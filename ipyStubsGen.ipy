@@ -35,7 +35,9 @@ for i in clr.References:
         assembly = i
         _x = assembly.GetModules()
         for j in _x:
-            if j.ToString().startswith(assembly_name):
+            # common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
+            common_asm = ["System"]
+            if not j.ToString().startswith(tuple(common_asm)):
                 asm_module = j
                 break
         break
@@ -53,15 +55,18 @@ asm_namespaces = list(set(_ret))
 
 for ns in asm_namespaces:
     print(f"[INFO:] Process namespace: {ns}")
+    lines = []
     # Create underlying folders
     try:
         System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
-        _ret = System.IO.File.Create(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py")
+        current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
+        current_initpy = System.IO.File.Create(current_initfile_path)
+        current_initpy.Close()
     except Exception as e:
-        print("[IO ERROR:]" + e)
+        print("[IO ERROR:]", e)
         sys.exit()
 
-    initpy.append(_ret)
+    # initpy.append(current_initpy)
 
     # Generate class definitions
     for _a in asm_clases:
@@ -72,8 +77,19 @@ for ns in asm_namespaces:
             print(f"[ERROR]: {e}")
             sys.exit()
 
-        print(class_template.substitute(class_name = _a.Name, 
-                            class_body = '',
-                            class_base_type = _ret).strip())
+        line = class_template.substitute(class_name = _a.Name, 
+                            class_body = 'pass',
+                            class_base_type = _ret).strip()
+        print(line)
+        lines.append(line)
+    
+    try: 
+        # print(dir(current_initpy))
+        System.IO.File.AppendAllLines(current_initfile_path, lines)
+        current_initpy.Close()
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("[IO ERROR:]", exc_tb.tb_lineno, e)
+        sys.exit()
 
 print(f"\nProcessed {len(asm_namespaces)} namespaces, {len(asm_clases)} classes.")
