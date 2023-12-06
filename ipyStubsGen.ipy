@@ -26,70 +26,85 @@ except Exception as e:
 assembly_name = ASSEMBLY_NAME
 assembly = None # 'Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
 asm_module = None # 'Eto.dll'
-asm_clases = []
-asm_namespaces = []
-initpy = []
+nr_asm_clases = 0
+asm_namespaces = set()
+current_initpy = None
+
+# common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
+common_asm = ["System"]
 
 for i in clr.References:
     if i.GetName().Name == assembly_name:
-        assembly = i
+        assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
         _x = assembly.GetModules()
         for j in _x:
-            # common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
-            common_asm = ["System"]
             if not j.ToString().startswith(tuple(common_asm)):
                 asm_module = j
                 break
-        break
+        # print(asm_module.FullyQualifiedName) # -> Eto.dll
+        # print(dir(asm_module)) # -> Eto.dll
+        for _cls in asm_module.GetTypes():
+            if (not _cls.IsClass) or (not _cls.IsPublic):
+                continue
 
-_ret = []
-for i in asm_module.GetTypes():
-    if i.FullName.startswith(assembly_name):
-        for _p in i.GetProperties():
-            _attr = _p.GetCustomAttributes(True)
-            for _a in _attr:
-                if type(_a) is not type(System.Runtime.CompilerServices.CompilerGeneratedAttribute):
-                    asm_clases.append(i)
-                    _ret.append(i.FullName.rsplit('.', 1)[0])
-asm_namespaces = list(set(_ret))
+            print(_cls.Name)
 
-for ns in asm_namespaces:
-    print(f"[INFO:] Process namespace: {ns}")
-    lines = []
-    # Create underlying folders
-    try:
-        System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
-        current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
-        current_initpy = System.IO.File.Create(current_initfile_path)
-        current_initpy.Close()
-    except Exception as e:
-        print("[IO ERROR:]", e)
-        sys.exit()
+            if _cls.Namespace.startswith(assembly_name):
+                ns = _cls.FullName.rsplit('.', 1)[0]
+                print(f"[INFO:] Process namespace: {ns}")
+                asm_namespaces.add(ns)
+                lines = []
 
-    # initpy.append(current_initpy)
+                # Create underlying folder(s) and file(s)
+                current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
+                if not System.IO.File.Exists(current_initfile_path):
+                    try:
+                        System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
+                        current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
+                        current_initpy = System.IO.File.Create(current_initfile_path)
+                        current_initpy.Close()
+                    except Exception as e:
+                        print("[IO ERROR:]", e)
+                        sys.exit()
+                
+                # print(dir(_cls))
+                # print(_cls.Name)
+                # print(_cls.IsClass, _cls.IsPublic)
+                # sys.exit()
 
-    # Generate class definitions
-    for _a in asm_clases:
-        # print(i)
-        try:
-            _ret = _a.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _a.BaseType is not None else ""
-        except Exception as e:
-            print(f"[ERROR]: {e}")
-            sys.exit()
+                # ignore if it is compiler generated
+                _compgen = False
+                for _p in _cls.GetProperties():               
+                    _attr = _p.GetCustomAttributes(True)
+                    for _a in _attr:
+                        if type(_a) is type(System.Runtime.CompilerServices.CompilerGeneratedAttribute):
+                            _compgen = True
+                            break
+                if _compgen:
+                    continue
 
-        line = class_template.substitute(class_name = _a.Name, 
-                            class_body = 'pass',
-                            class_base_type = _ret).strip()
-        print(line)
-        lines.append(line)
-    
-    try: 
-        # print(dir(current_initpy))
-        System.IO.File.AppendAllLines(current_initfile_path, lines)
-        current_initpy.Close()
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("[IO ERROR:]", exc_tb.tb_lineno, e)
-        sys.exit()
+                try:
+                    _ret = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
+                except Exception as e:
+                    print(f"[ERROR]: {e}")
+                    sys.exit()
 
-print(f"\nProcessed {len(asm_namespaces)} namespaces, {len(asm_clases)} classes.")
+                line = class_template.substitute(class_name = _cls.Name, 
+                                    class_body = 'pass',
+                                    class_base_type = _ret).strip()
+                # print(line)
+                lines.append(line)
+                nr_asm_clases += 1
+                
+                try: 
+                    # print(dir(current_initpy))
+                    System.IO.File.AppendAllLines(current_initfile_path, lines)
+                    current_initpy.Close()
+                except Exception as e:
+                    exc_type, exc_obj, exc_tb = sys.exc_info()
+                    print("[IO ERROR:]", exc_tb.tb_lineno, e)
+                    sys.exit()
+
+print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes.")
+
+
