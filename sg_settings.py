@@ -5,9 +5,13 @@ STUBS_PATH = "/Stubs"
 
 class_template = Template('''
 class $class_name($class_base_type):
-  $class_body
+    # isAbstract : $class_abstract
+    $class_body
 ''')
-
+init_template = Template('''
+    def __init__(self, *args, **kwargs):
+        pass                      
+''')
 method_template = Template(''' 
     def $method_name(self, $method_args):
         $method_body
