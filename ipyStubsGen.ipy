@@ -28,6 +28,7 @@ assembly = None # 'Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
 asm_module = None # 'Eto.dll'
 nr_asm_clases = 0
 asm_namespaces = set()
+# nr_asm_namespaces = 0
 current_initpy = None
 
 # common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
@@ -43,9 +44,10 @@ for i in clr.References:
                 break
         # print(asm_module.FullyQualifiedName) # -> Eto.dll
         # print(dir(asm_module)) # -> Eto.dll
-        for _cls in asm_module.GetTypes():
-            if (not _cls.IsClass) or (not _cls.IsPublic):
-                continue
+        _ret_asm_classes = [x for x in asm_module.GetTypes() if x.IsClass and x.IsPublic]
+        for _cls in _ret_asm_classes:
+            # if (not _cls.IsClass) or (not _cls.IsPublic):
+            #     continue
 
             print(_cls.Name)
 
@@ -53,6 +55,7 @@ for i in clr.References:
                 ns = _cls.FullName.rsplit('.', 1)[0]
                 print(f"[INFO:] Process namespace: {ns}")
                 asm_namespaces.add(ns)
+                # nr_asm_namespaces += 1
                 lines = []
 
                 # Create underlying folder(s) and file(s)
@@ -66,15 +69,23 @@ for i in clr.References:
                     except Exception as e:
                         print("[IO ERROR:]", e)
                         sys.exit()
-                
-                # print(dir(_cls))
-                # print(_cls.Name)
-                # print(_cls.IsClass, _cls.IsPublic)
-                # sys.exit()
+                # else:
+                    # current_initpy = System.IO.File.OpenWrite(current_initfile_path)
+                    # current_initpy.Close()
+                    # System.IO.File.WriteAllText(current_initfile_path, "")
+                    # System.IO.File.AppendAllLines(current_initfile_path, [])
+                    # current_initpy.Close()
+                    # print("[IO ERROR:]", "Folder ", current_initfile_path, " not empty.")
+                    # print("Exit now...")
+                    # sys.exit()
 
+                # get all properties
+                _ret_cls_prop = [x for x in _cls.GetProperties(System.Reflection.BindingFlags.Instance | 
+                                                    System.Reflection.BindingFlags.Static | 
+                                                    System.Reflection.BindingFlags.Public)]
                 # ignore if it is compiler generated
                 _compgen = False
-                for _p in _cls.GetProperties():               
+                for _p in _ret_cls_prop:               
                     _attr = _p.GetCustomAttributes(True)
                     for _a in _attr:
                         if type(_a) is type(System.Runtime.CompilerServices.CompilerGeneratedAttribute):
@@ -82,16 +93,47 @@ for i in clr.References:
                             break
                 if _compgen:
                     continue
-
+                
+                _prop_lines = []
                 try:
-                    _ret = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
+                    for _prop in _ret_cls_prop:
+                        _prop_line = property_template.substitute(property_name = _prop.Name)
+                        _prop_lines.append(_prop_line)
+                except Exception as e:
+                    print(f"[ERROR]: {e}")
+                    sys.exit()
+                _prop_body_str = "".join(_prop_lines)
+
+                # get all methods
+                _ret_cls_methods = [x for x in _cls.GetMethods(System.Reflection.BindingFlags.DeclaredOnly |
+                                                System.Reflection.BindingFlags.Public |
+                                                System.Reflection.BindingFlags.Instance)]
+                _metd_lines = []
+                try:
+                    for _metd in _ret_cls_methods:
+                        _metd_line = method_template.substitute(method_name = _metd.Name, 
+                                                        method_args = _metd.GetParameters(),
+                                                        method_body = "",
+                                                        return_val = _metd.ReturnParameter)
+                        _metd_lines.append(_metd_line)
+                except Exception as e:
+                    print(f"[ERROR]: {e}")
+                    sys.exit()
+                _meth_body_str = "".join(_metd_lines)
+
+                # get class Base type
+                try:
+                    _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
                 except Exception as e:
                     print(f"[ERROR]: {e}")
                     sys.exit()
 
+                class_body_str = _prop_body_str + _meth_body_str if (len(_prop_lines) > 0 and len(_meth_body_str) > 0) else "pass"
+                # class_body_str += _meth_body_str if len(_meth_body_str) > 0 else "pass"
+
                 line = class_template.substitute(class_name = _cls.Name, 
-                                    class_body = 'pass',
-                                    class_base_type = _ret).strip()
+                                    class_body = class_body_str,
+                                    class_base_type = _ret_cls_base).strip()
                 # print(line)
                 lines.append(line)
                 nr_asm_clases += 1
@@ -99,7 +141,7 @@ for i in clr.References:
                 try: 
                     # print(dir(current_initpy))
                     System.IO.File.AppendAllLines(current_initfile_path, lines)
-                    current_initpy.Close()
+                    if current_initpy is not None: current_initpy.Close()
                 except Exception as e:
                     exc_type, exc_obj, exc_tb = sys.exc_info()
                     print("[IO ERROR:]", exc_tb.tb_lineno, e)
