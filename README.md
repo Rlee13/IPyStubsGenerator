@@ -1,1 +1,2 @@
-# IPyStubsGenerator
+# IronPython Stubs Generator for VSCode
+
