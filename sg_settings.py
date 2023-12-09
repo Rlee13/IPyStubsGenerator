@@ -13,8 +13,7 @@ init_template = Template('''
         pass                      
 ''')
 method_template = Template(''' 
-    def $method_name(self, $method_args):
-        $method_body
+    def $method_name(self$method_args):
         return $return_val
 ''')
 

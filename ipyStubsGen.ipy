@@ -123,10 +123,15 @@ for i in clr.References:
                         if (_metd.Name.startswith("set_") or _metd.Name.startswith("get_")):
                             # print(_metd.Name)
                             continue
+                        # the the parameters
+                        # TODO redo the arguments to represent the actual names/types
+                        _metd_args = ",".join([x.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') for x in _metd.GetParameters()])
+                        if len(_metd_args) > 0: _metd_args = ", " + _metd_args
+                        #
+
                         _metd_line = method_template.substitute(method_name = _metd.Name, 
-                                                        method_args = _metd.GetParameters(),
-                                                        method_body = "",
-                                                        return_val = _metd.ReturnParameter)
+                                                        method_args = _metd_args,
+                                                        return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_'))
                         _metd_lines.append(_metd_line)
                 except Exception as e:
                     print(f"[ERROR]: {e}")
@@ -144,7 +149,7 @@ for i in clr.References:
 
                 line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
                                     class_abstract = _cls.IsAbstract,
-                                    class_body = class_body_str,
+                                    class_body = class_body_str if len(class_body_str) > 0 else "pass",
                                     class_base_type = _ret_cls_base).rstrip()
                 # print(line)
                 lines.append(line)
