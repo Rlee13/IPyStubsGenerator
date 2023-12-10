@@ -32,3 +32,8 @@ dependencies = '''
 
     ERROR:: Cannot import library:
 '''
+
+invalid_args_msg = ''' 
+
+    ipy.bat ipyStubsGen --f"PATH_TO_DLL_FILE"
+'''
