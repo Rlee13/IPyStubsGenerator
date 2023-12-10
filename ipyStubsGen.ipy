@@ -13,7 +13,8 @@ TEST = True
 arguments = System.Environment.GetCommandLineArgs()
 for arg in arguments:
     if arg.startswith("--f") and TEST is not True:
-        ASSEMBLY_NAME = arg
+        ASSEMBLY_NAME = arg[3:]
+        break
     else:
         if TEST is not True:
             print(SG.invalid_args_msg)
