@@ -1,0 +1,186 @@
+import clr, sys, os
+
+import sg_settings as SG
+from sg_settings import *
+
+clr.AddReference("System.Core")
+import System
+
+######## CHANGE TO False FOR RELEASE
+TEST = True
+########
+
+arguments = System.Environment.GetCommandLineArgs()
+for arg in arguments:
+    if arg.startswith("--f") and TEST is not True:
+        ASSEMBLY_NAME = arg[3:]
+        break
+    else:
+        if TEST is not True:
+            print(SG.invalid_args_msg)
+            System.Console.ReadKey()
+            sys.exit(1)
+        else:
+            ASSEMBLY_NAME = "Eto"
+
+######## CHANGE TO ARGS
+# ASSEMBLY_NAME = "Eto"
+########
+
+sys.path.append(os.getcwd() + SG.ASSEMBLIES_PATH)
+
+if (not clr.IsNetCoreApp):
+    print(SG.dotnet_platform)
+    sys.exit(1)
+    
+try:
+    clr.AddReference(ASSEMBLY_NAME)
+except Exception as e:
+    print(SG.dependencies)
+    print("\t\t\t" + ASSEMBLY_NAME, "from ", SG.ASSEMBLIES_PATH + "/" + ASSEMBLY_NAME + ".dll")
+    sys.exit(1)
+
+assembly_name = ASSEMBLY_NAME
+assembly = None # 'Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
+asm_module = None # 'Eto.dll'
+nr_asm_clases = 0
+asm_namespaces = set()
+# nr_asm_namespaces = 0
+current_initpy = None
+
+# common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
+common_asm = ["System"]
+
+di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
+# print(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
+# sys.exit()
+
+for _f in di.GetFiles():
+    _f.Delete(); 
+for _d in di.GetDirectories():
+    _d.Delete(True)
+
+for i in clr.References:
+    if i.GetName().Name == assembly_name:
+        assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
+        _x = assembly.GetModules()
+        for j in _x:
+            if not j.ToString().startswith(tuple(common_asm)):
+                asm_module = j
+                break
+        # print(asm_module.FullyQualifiedName) # -> Eto.dll
+        # print(dir(asm_module)) # -> Eto.dll
+        _ret_asm_classes = [x for x in asm_module.GetTypes() if x.IsClass and x.IsPublic]
+        for _cls in _ret_asm_classes:
+            # if (not _cls.IsClass) or (not _cls.IsPublic):
+            #     continue
+
+            # print(_cls.Name)
+
+            if _cls.Namespace.startswith(assembly_name):
+                ns = _cls.FullName.rsplit('.', 1)[0]
+                # print(f"[INFO:] Process namespace: {ns}")
+                asm_namespaces.add(ns)
+                # nr_asm_namespaces += 1
+                lines = []
+
+                # Create underlying folder(s) and file(s)
+                current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
+                if not System.IO.File.Exists(current_initfile_path):
+                    try:
+                        System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
+                        # current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
+                        current_initpy = System.IO.File.Create(current_initfile_path)
+                        current_initpy.Close()
+                    except Exception as e:
+                        print("[IO ERROR:]", e)
+                        sys.exit(1)
+                # else:
+                    # current_initpy = System.IO.File.OpenWrite(current_initfile_path)
+                    # current_initpy.Close()
+                    # System.IO.File.WriteAllText(current_initfile_path, "")
+                    # System.IO.File.AppendAllLines(current_initfile_path, [])
+                    # current_initpy.Close()
+                    # print("[IO ERROR:]", "Folder ", current_initfile_path, " not empty.")
+                    # print("Exit now...")
+                    # sys.exit()
+
+                # get all properties
+                _ret_cls_prop = [x for x in _cls.GetProperties(System.Reflection.BindingFlags.Instance | 
+                                                    System.Reflection.BindingFlags.Static | 
+                                                    System.Reflection.BindingFlags.Public)]
+                # ignore if it is compiler generated
+                _compgen = False
+                for _p in _ret_cls_prop:               
+                    _attr = _p.GetCustomAttributes(True)
+                    for _a in _attr:
+                        if type(_a) is type(System.Runtime.CompilerServices.CompilerGeneratedAttribute):
+                            _compgen = True
+                            break
+                if _compgen:
+                    continue
+                
+                _prop_lines = []
+                try:
+                    for _prop in _ret_cls_prop:
+                        _prop_line = property_template.substitute(property_name = _prop.Name)
+                        _prop_lines.append(_prop_line)
+                except Exception as e:
+                    print(f"[ERROR]: {e}")
+                    sys.exit(1)
+                _prop_body_str = "".join(_prop_lines)
+
+                # get all methods
+                _ret_cls_methods = [x for x in _cls.GetMethods(System.Reflection.BindingFlags.DeclaredOnly |
+                                                System.Reflection.BindingFlags.Public |
+                                                System.Reflection.BindingFlags.Instance)]
+                _metd_lines = []
+                try:
+                    for _metd in _ret_cls_methods:
+                        if (_metd.Name.startswith("set_") or _metd.Name.startswith("get_")):
+                            # print(_metd.Name)
+                            continue
+                        # the the parameters
+                        # TODO redo the arguments to represent the actual names/types
+                        _metd_args = ",".join([x.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') for x in _metd.GetParameters()])
+                        if len(_metd_args) > 0: _metd_args = ", " + _metd_args
+                        #
+
+                        _metd_line = method_template.substitute(method_name = _metd.Name, 
+                                                        method_args = _metd_args,
+                                                        return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_'))
+                        _metd_lines.append(_metd_line)
+                except Exception as e:
+                    print(f"[ERROR]: {e}")
+                    sys.exit(1)
+                _meth_body_str = "".join(_metd_lines)
+
+                # get class Base type
+                try:
+                    _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
+                except Exception as e:
+                    print(f"[ERROR]: {e}")
+                    sys.exit(1)
+
+                class_body_str = _prop_body_str + _meth_body_str
+
+                line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
+                                    class_abstract = _cls.IsAbstract,
+                                    class_body = class_body_str if len(class_body_str) > 0 else "pass",
+                                    class_base_type = _ret_cls_base).rstrip()
+                # print(line)
+                lines.append(line)
+                nr_asm_clases += 1
+                
+                try: 
+                    # print(dir(current_initpy))
+                    System.IO.File.AppendAllLines(current_initfile_path, lines)
+                    if current_initpy is not None: current_initpy.Close()
+                except Exception as e:
+                    exc_type, exc_obj, exc_tb = sys.exc_info()
+                    print("[IO ERROR:]", exc_tb.tb_lineno, e)
+                    sys.exit(1)
+
+print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes.")
+
+
