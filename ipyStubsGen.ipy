@@ -6,6 +6,7 @@ from sg_settings import *
 clr.AddReference("System.Core")
 import System
 
+__version__ = "0.0.1"
 ######## CHANGE TO False FOR RELEASE
 TEST = True
 ########
@@ -21,7 +22,7 @@ for arg in arguments:
             System.Console.ReadKey()
             sys.exit(1)
         else:
-            ASSEMBLY_NAME = "Eto"
+            ASSEMBLY_NAME = "GtkSharp"
 
 ######## CHANGE TO ARGS
 # ASSEMBLY_NAME = "Eto"
@@ -49,16 +50,16 @@ asm_namespaces = set()
 current_initpy = None
 
 # common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
-common_asm = ["System"]
+common_asm = ["System", "Microsoft"]
 
 di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
 # print(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
 # sys.exit()
-
-for _f in di.GetFiles():
-    _f.Delete(); 
-for _d in di.GetDirectories():
-    _d.Delete(True)
+if System.IO.File.Exists(di.ToString()):
+    for _f in di.GetFiles():
+        _f.Delete(); 
+    for _d in di.GetDirectories():
+        _d.Delete(True)
 
 for i in clr.References:
     if i.GetName().Name == assembly_name:
@@ -75,9 +76,9 @@ for i in clr.References:
             # if (not _cls.IsClass) or (not _cls.IsPublic):
             #     continue
 
-            # print(_cls.Name)
+            # print(_cls.Namespace, assembly_name), sys.exit()
 
-            if _cls.Namespace.startswith(assembly_name):
+            if not _cls.Namespace.startswith(tuple(common_asm)):
                 ns = _cls.FullName.rsplit('.', 1)[0]
                 # print(f"[INFO:] Process namespace: {ns}")
                 asm_namespaces.add(ns)
