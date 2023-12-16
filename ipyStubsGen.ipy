@@ -68,14 +68,16 @@ for i in clr.References:
     if i.GetName().Name == assembly_name:
         assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
         assembly_version = assembly.GetName().Version.ToString()
-        file_version         = FVI.GetVersionInfo(assembly.Location).FileVersion.ToString()
-        product_version      = FVI.GetVersionInfo(assembly.Location).ProductVersion.ToString()
-        assembly_title       = FVI.GetVersionInfo(assembly.Location).FileDescription
-        assembly_description = FVI.GetVersionInfo(assembly.Location).Comments
-        assembly_product     = FVI.GetVersionInfo(assembly.Location).ProductName
-        assembly_company     = FVI.GetVersionInfo(assembly.Location).CompanyName
-        assembly_copyright   = FVI.GetVersionInfo(assembly.Location).LegalCopyright
-        assembly_trademark   = FVI.GetVersionInfo(assembly.Location).LegalTrademarks
+        
+        _asl = FVI.GetVersionInfo(assembly.Location)
+        file_version         = _asl.FileVersion.ToString()
+        product_version      = _asl.ProductVersion.ToString()
+        assembly_title       = _asl.FileDescription
+        assembly_description = _asl.Comments
+        assembly_product     = _asl.ProductName
+        assembly_company     = _asl.CompanyName
+        assembly_copyright   = _asl.LegalCopyright
+        assembly_trademark   = _asl.LegalTrademarks
 
         _x = assembly.GetModules()
         for j in _x:
