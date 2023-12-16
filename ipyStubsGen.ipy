@@ -6,7 +6,11 @@ from sg_settings import *
 clr.AddReference("System.Core")
 import System
 
+clr.AddReference("System.Diagnostics.FileVersionInfo")
+import System.Diagnostics.FileVersionInfo as FVI
+
 __version__ = "0.0.1"
+__author__ = "RLee"
 ######## CHANGE TO False FOR RELEASE
 TEST = True
 ########
@@ -22,7 +26,7 @@ for arg in arguments:
             System.Console.ReadKey()
             sys.exit(1)
         else:
-            ASSEMBLY_NAME = "GtkSharp"
+            ASSEMBLY_NAME = "Eto"
 
 ######## CHANGE TO ARGS
 # ASSEMBLY_NAME = "Eto"
@@ -43,6 +47,7 @@ except Exception as e:
 
 assembly_name = ASSEMBLY_NAME
 assembly = None # 'Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
+assembly_version = None
 asm_module = None # 'Eto.dll'
 nr_asm_clases = 0
 asm_namespaces = set()
@@ -53,9 +58,7 @@ current_initpy = None
 common_asm = ["System", "Microsoft"]
 
 di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
-# print(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
-# sys.exit()
-if System.IO.File.Exists(di.ToString()):
+if System.IO.Directory.Exists(di.ToString()):
     for _f in di.GetFiles():
         _f.Delete(); 
     for _d in di.GetDirectories():
@@ -64,47 +67,55 @@ if System.IO.File.Exists(di.ToString()):
 for i in clr.References:
     if i.GetName().Name == assembly_name:
         assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
+        assembly_version = assembly.GetName().Version.ToString()
+        file_version         = FVI.GetVersionInfo(assembly.Location).FileVersion.ToString()
+        product_version      = FVI.GetVersionInfo(assembly.Location).ProductVersion.ToString()
+        assembly_title       = FVI.GetVersionInfo(assembly.Location).FileDescription
+        assembly_description = FVI.GetVersionInfo(assembly.Location).Comments
+        assembly_product     = FVI.GetVersionInfo(assembly.Location).ProductName
+        assembly_company     = FVI.GetVersionInfo(assembly.Location).CompanyName
+        assembly_copyright   = FVI.GetVersionInfo(assembly.Location).LegalCopyright
+        assembly_trademark   = FVI.GetVersionInfo(assembly.Location).LegalTrademarks
+
         _x = assembly.GetModules()
         for j in _x:
             if not j.ToString().startswith(tuple(common_asm)):
                 asm_module = j
                 break
-        # print(asm_module.FullyQualifiedName) # -> Eto.dll
-        # print(dir(asm_module)) # -> Eto.dll
         _ret_asm_classes = [x for x in asm_module.GetTypes() if x.IsClass and x.IsPublic]
         for _cls in _ret_asm_classes:
-            # if (not _cls.IsClass) or (not _cls.IsPublic):
-            #     continue
-
-            # print(_cls.Namespace, assembly_name), sys.exit()
 
             if not _cls.Namespace.startswith(tuple(common_asm)):
                 ns = _cls.FullName.rsplit('.', 1)[0]
-                # print(f"[INFO:] Process namespace: {ns}")
                 asm_namespaces.add(ns)
-                # nr_asm_namespaces += 1
                 lines = []
 
-                # Create underlying folder(s) and file(s)
+                # Create stubs' underlying folder(s) and file(s)
                 current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
                 if not System.IO.File.Exists(current_initfile_path):
                     try:
                         System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
                         # current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
                         current_initpy = System.IO.File.Create(current_initfile_path)
+
+                        _init_line = init_file_header_template.substitute(
+                                assembly_version = assembly_version, 
+                                file_version = file_version,
+                                product_version = product_version, 
+                                assembly_title = assembly_title,
+                                assembly_description = assembly_description,
+                                assembly_product = assembly_product,
+                                assembly_company = assembly_company,
+                                assembly_copyright = assembly_copyright, 
+                                assembly_trademark = assembly_trademark,
+                                version = __version__
+                        )
+                        
+                        current_initpy.Write(System.Text.Encoding.UTF8.GetBytes(_init_line), 0, len(_init_line))
                         current_initpy.Close()
                     except Exception as e:
                         print("[IO ERROR:]", e)
                         sys.exit(1)
-                # else:
-                    # current_initpy = System.IO.File.OpenWrite(current_initfile_path)
-                    # current_initpy.Close()
-                    # System.IO.File.WriteAllText(current_initfile_path, "")
-                    # System.IO.File.AppendAllLines(current_initfile_path, [])
-                    # current_initpy.Close()
-                    # print("[IO ERROR:]", "Folder ", current_initfile_path, " not empty.")
-                    # print("Exit now...")
-                    # sys.exit()
 
                 # get all properties
                 _ret_cls_prop = [x for x in _cls.GetProperties(System.Reflection.BindingFlags.Instance | 
@@ -139,7 +150,6 @@ for i in clr.References:
                 try:
                     for _metd in _ret_cls_methods:
                         if (_metd.Name.startswith("set_") or _metd.Name.startswith("get_")):
-                            # print(_metd.Name)
                             continue
                         # the the parameters
                         # TODO redo the arguments to represent the actual names/types
@@ -169,12 +179,10 @@ for i in clr.References:
                                     class_abstract = _cls.IsAbstract,
                                     class_body = class_body_str if len(class_body_str) > 0 else "pass",
                                     class_base_type = _ret_cls_base).rstrip()
-                # print(line)
                 lines.append(line)
                 nr_asm_clases += 1
                 
                 try: 
-                    # print(dir(current_initpy))
                     System.IO.File.AppendAllLines(current_initfile_path, lines)
                     if current_initpy is not None: current_initpy.Close()
                 except Exception as e:
