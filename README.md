@@ -6,3 +6,9 @@ Usage:
 - the stubs are generated in the Stubs folder.
 - Copy the generated folder into the .stubs folder inside the project's stucture.
 - add the .stub folder to the "python.analysis.extraPaths" setting in .vscode\settings.json in your project.
+
+# Reference
+
+- Other similar tools:
+
+  -- https://github.com/gtalarico/ironpython-stubs/
