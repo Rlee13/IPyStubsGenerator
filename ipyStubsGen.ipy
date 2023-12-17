@@ -3,11 +3,7 @@ import clr, sys, os
 import sg_settings as SG
 from sg_settings import *
 
-clr.AddReference("System.Core")
 import System
-
-clr.AddReference("System.Diagnostics.FileVersionInfo")
-import System.Diagnostics.FileVersionInfo as FVI
 
 __version__ = "0.0.1"
 __author__ = "RLee"
@@ -15,18 +11,34 @@ __author__ = "RLee"
 TEST = True
 ########
 
+_list_namespaces = False
+ASSEMBLY_NAME = "Eto"
+
+
+if (not clr.IsNetCoreApp):
+    print(SG.dotnet_platform)
+    sys.exit(1)
+
 arguments = System.Environment.GetCommandLineArgs()
 for arg in arguments:
-    if arg.startswith("--f") and TEST is not True:
+    if arg.startswith("--l"):
+        ASSEMBLY_NAME = arg[3:]
+        _list_namespaces = True
+        print(f"Modules contained in assembly {ASSEMBLY_NAME}:")
+        print("="*75)
+        break
+    elif arg.startswith("--f"):
         ASSEMBLY_NAME = arg[3:]
         break
-    else:
-        if TEST is not True:
-            print(SG.invalid_args_msg)
-            System.Console.ReadKey()
-            sys.exit(1)
-        else:
-            ASSEMBLY_NAME = "Eto"
+    elif TEST is not True:
+        print(SG.invalid_args_msg)
+        System.Console.ReadKey()
+        sys.exit(1)
+    # else:
+    #     ASSEMBLY_NAME = "Eto"
+    #     break
+
+# sys.exit()
 
 ######## CHANGE TO ARGS
 # ASSEMBLY_NAME = "Eto"
@@ -34,10 +46,6 @@ for arg in arguments:
 
 sys.path.append(os.getcwd() + SG.ASSEMBLIES_PATH)
 
-if (not clr.IsNetCoreApp):
-    print(SG.dotnet_platform)
-    sys.exit(1)
-    
 try:
     clr.AddReference(ASSEMBLY_NAME)
 except Exception as e:
@@ -56,6 +64,9 @@ current_initpy = None
 
 # common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
 common_asm = ["System", "Microsoft"]
+
+clr.AddReference("System.Diagnostics.FileVersionInfo")
+import System.Diagnostics.FileVersionInfo as FVI
 
 di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
 if System.IO.Directory.Exists(di.ToString()):
@@ -84,6 +95,12 @@ for i in clr.References:
             if not j.ToString().startswith(tuple(common_asm)):
                 asm_module = j
                 break
+
+
+        if _list_namespaces:
+            print("\n".join(set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])))
+            sys.exit()
+            
         _ret_asm_classes = [x for x in asm_module.GetTypes() if x.IsClass and x.IsPublic]
         for _cls in _ret_asm_classes:
 
