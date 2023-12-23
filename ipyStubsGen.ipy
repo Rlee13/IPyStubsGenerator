@@ -24,7 +24,7 @@ for arg in arguments:
     if arg.startswith("--l"):
         ASSEMBLY_NAME = arg[3:]
         _list_namespaces = True
-        print(f"Modules contained in assembly {ASSEMBLY_NAME}:")
+        print(f"Modules contained in assembly {ASSEMBLY_NAME}:") # type: ignore
         print("="*75)
         break
     elif arg.startswith("--f"):
@@ -63,7 +63,7 @@ current_initpy = None
 common_asm = ["System", "Microsoft"]
 
 clr.AddReference("System.Diagnostics.FileVersionInfo")
-import System.Diagnostics.FileVersionInfo as FVI
+import System.Diagnostics.FileVersionInfo as FVI # type: ignore
 
 di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
 if System.IO.Directory.Exists(di.ToString()):
@@ -153,7 +153,7 @@ for i in clr.References:
                         _prop_line = property_template.substitute(property_name = _prop.Name)
                         _prop_lines.append(_prop_line)
                 except Exception as e:
-                    print(f"[ERROR]: {e}")
+                    print(f"[ERROR]: {e}") # type: ignore
                     sys.exit(1)
                 _prop_body_str = "".join(_prop_lines)
 
@@ -177,7 +177,7 @@ for i in clr.References:
                                                         return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_'))
                         _metd_lines.append(_metd_line)
                 except Exception as e:
-                    print(f"[ERROR]: {e}")
+                    print(f"[ERROR]: {e}") # type: ignore
                     sys.exit(1)
                 _meth_body_str = "".join(_metd_lines)
 
@@ -226,6 +226,6 @@ for i in clr.References:
                     print("[IO ERROR:]", exc_tb.tb_lineno, e)
                     sys.exit(1)
 
-print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes, {nr_asm_enums} enums, {nr_asm_skipped} skipped.")
+print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes, {nr_asm_enums} enums, {nr_asm_skipped} skipped.") # type: ignore
 
 
