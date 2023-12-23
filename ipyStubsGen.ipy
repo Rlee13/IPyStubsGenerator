@@ -34,11 +34,6 @@ for arg in arguments:
         print(SG.invalid_args_msg)
         System.Console.ReadKey()
         sys.exit(1)
-    # else:
-    #     ASSEMBLY_NAME = "Eto"
-    #     break
-
-# sys.exit()
 
 ######## CHANGE TO ARGS
 # ASSEMBLY_NAME = "Eto"
@@ -58,6 +53,8 @@ assembly = None # 'Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
 assembly_version = None
 asm_module = None # 'Eto.dll'
 nr_asm_clases = 0
+nr_asm_enums = 0
+nr_asm_skipped = 0
 asm_namespaces = set()
 # nr_asm_namespaces = 0
 current_initpy = None
@@ -101,8 +98,8 @@ for i in clr.References:
             print("\n".join(set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])))
             sys.exit()
             
-        _ret_asm_classes = [x for x in asm_module.GetTypes() if x.IsClass and x.IsPublic]
-        for _cls in _ret_asm_classes:
+        _ret_asm_types = [x for x in asm_module.GetTypes() if x.IsPublic]
+        for _cls in _ret_asm_types:
 
             if not _cls.Namespace.startswith(tuple(common_asm)):
                 ns = _cls.FullName.rsplit('.', 1)[0]
@@ -114,7 +111,6 @@ for i in clr.References:
                 if not System.IO.File.Exists(current_initfile_path):
                     try:
                         System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
-                        # current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
                         current_initpy = System.IO.File.Create(current_initfile_path)
 
                         _init_line = init_file_header_template.substitute(
@@ -185,21 +181,42 @@ for i in clr.References:
                     sys.exit(1)
                 _meth_body_str = "".join(_metd_lines)
 
-                # get class Base type
+                # get class Base type 
+                # TODO Interface
+                _cbt = ""
                 try:
-                    _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
+                    _cbt = _cls.BaseType.ToString()
                 except Exception as e:
-                    print(f"[ERROR]: {e}")
-                    sys.exit(1)
+                    # print(f"[ERROR]: {e}")
+                    # sys.exit(1)
+                    nr_asm_skipped += 1
+                    continue
 
-                class_body_str = _prop_body_str + _meth_body_str
+                # test if enum or class TODO get real values for the enums fields
+                if _cbt is not "":
+                    if _cbt == "System.Enum":
+                        _enm_lines = []
+                        _enm_val = 0
+                        _enm_line = ""
+                        for _x in System.Enum.GetValues(_cls):
+                            _enm_line = str(_x) + " = " + str(_enm_val)
+                            _enm_lines.append(_enm_line)
+                            _enm_val += 1
 
-                line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
-                                    class_abstract = _cls.IsAbstract,
-                                    class_body = class_body_str if len(class_body_str) > 0 else "pass",
-                                    class_base_type = _ret_cls_base).rstrip()
+                        line = enum_template.substitute(enum_name = _cls.Name.rsplit('`',1)[0],
+                                            enum_body = "pass" if len(_enm_lines) == 0 else "\n    ".join(_enm_lines)
+                                            ).rstrip()
+                        nr_asm_enums += 1
+                    else:
+                        _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
+                        class_body_str = _prop_body_str + _meth_body_str
+                        line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
+                                            class_abstract = _cls.IsAbstract,
+                                            class_body = class_body_str if len(class_body_str) > 0 else "pass",
+                                            class_base_type = _ret_cls_base).rstrip()
+                        nr_asm_clases += 1
+
                 lines.append(line)
-                nr_asm_clases += 1
                 
                 try: 
                     System.IO.File.AppendAllLines(current_initfile_path, lines)
@@ -209,6 +226,6 @@ for i in clr.References:
                     print("[IO ERROR:]", exc_tb.tb_lineno, e)
                     sys.exit(1)
 
-print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes.")
+print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes, {nr_asm_enums} enums, {nr_asm_skipped} skipped.")
 
 
