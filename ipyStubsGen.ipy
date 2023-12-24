@@ -76,7 +76,10 @@ for i in clr.References:
     if i.GetName().Name == assembly_name:
         assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
         assembly_version = assembly.GetName().Version.ToString()
-        
+
+        _atf = assembly.GetCustomAttributes(System.Runtime.Versioning.TargetFrameworkAttribute, False)
+        assembly_target_framework = _atf[0].FrameworkDisplayName if len(_atf) > 0 else ""
+            
         _asl = FVI.GetVersionInfo(assembly.Location)
         file_version         = _asl.FileVersion.ToString()
         product_version      = _asl.ProductVersion.ToString()
@@ -92,7 +95,6 @@ for i in clr.References:
             if not j.ToString().startswith(tuple(common_asm)):
                 asm_module = j
                 break
-
 
         if _list_namespaces:
             print("\n".join(set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])))
@@ -115,6 +117,7 @@ for i in clr.References:
 
                         _init_line = init_file_header_template.substitute(
                                 assembly_version = assembly_version, 
+                                assembly_target_framework = assembly_target_framework,
                                 file_version = file_version,
                                 product_version = product_version, 
                                 assembly_title = assembly_title,
