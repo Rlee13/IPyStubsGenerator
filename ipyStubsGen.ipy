@@ -239,10 +239,21 @@ for i in clr.References:
                                             ).rstrip()
                         nr_asm_enums += 1
                     else:
+                        class_doc_str = ""
                         _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
                         class_body_str = _prop_body_str + _meth_body_str
+
+                        if asm_xmldocs:
+                            try:
+                                _descript = asm_doc.SelectNodes("//member[@name='T:" + _cls.FullName + "']")
+                                for i in _descript[0].SelectNodes("*"):
+                                    class_doc_str = class_doc_str + "### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+                            except Exception as e:
+                                pass 
+                        
                         line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
                                             class_abstract = _cls.IsAbstract,
+                                            class_doc = class_doc_str,
                                             class_body = class_body_str if len(class_body_str) > 0 else "pass",
                                             class_base_type = _ret_cls_base).rstrip()
                         nr_asm_clases += 1
