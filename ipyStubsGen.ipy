@@ -235,6 +235,7 @@ for i in clr.References:
 
                         line = enum_template.substitute(enum_name = _cls.Name.rsplit('`',1)[0],
                                             enum_type = _cls.IsEnum,
+                                            enum_doc = "",
                                             enum_body = "pass" if len(_enm_lines) == 0 else "\n    ".join(_enm_lines)
                                             ).rstrip()
                         nr_asm_enums += 1

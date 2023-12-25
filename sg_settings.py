@@ -20,7 +20,11 @@ init_file_header_template = Template('''
 
 enum_template = Template('''
 class $enum_name(Enum):
-    # isEnum : $enum_type                         
+    """
+    #: isEnum : $enum_type
+
+$enum_doc   
+    """
     $enum_body
 ''')
 
