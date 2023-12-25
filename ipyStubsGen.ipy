@@ -58,6 +58,8 @@ nr_asm_skipped = 0
 asm_namespaces = set()
 # nr_asm_namespaces = 0
 current_initpy = None
+asm_xmldocs = True
+asm_doc = None
 
 # common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
 common_asm = ["System", "Microsoft"]
@@ -71,6 +73,18 @@ if System.IO.Directory.Exists(di.ToString()):
         _f.Delete(); 
     for _d in di.GetDirectories():
         _d.Delete(True)
+
+# check if xml doc available
+_asm_doc_filename = os.getcwd() + ASSEMBLIES_PATH +  "\\" + ASSEMBLY_NAME + ".xml"
+if System.IO.File.Exists(_asm_doc_filename):
+    clr.AddReference('System.Xml')
+    from System.Xml import XmlDocument
+    try:
+        asm_xmldocs = True
+        asm_doc = XmlDocument()
+        asm_doc.Load(_asm_doc_filename)
+    except Exception as e:
+        print("[XML ERROR:]", e)
 
 for i in clr.References:
     if i.GetName().Name == assembly_name:
@@ -151,9 +165,22 @@ for i in clr.References:
                     continue
                 
                 _prop_lines = []
+                
                 try:
                     for _prop in _ret_cls_prop:
-                        _prop_line = property_template.substitute(property_name = _prop.Name)
+                        _prop_docs = ""
+                        if asm_xmldocs:
+                            try:
+                                _descript = asm_doc.SelectNodes("//member[@name='P:" + _cls.FullName + "." + _prop.Name + "']")
+                                for i in _descript[0].SelectNodes("*"):
+                                    _prop_docs = _prop_docs + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+
+                                _prop_docs = "\"\"\"" + _prop_docs + "\"\"\""
+                            except Exception as e:
+                                pass
+                        _prop_line = property_template.substitute(property_name = _prop.Name,
+                                property_doc = _prop_docs if _prop_docs else ""
+                                )
                         _prop_lines.append(_prop_line)
                 except Exception as e:
                     print(f"[ERROR]: {e}") # type: ignore

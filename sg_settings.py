@@ -40,6 +40,7 @@ method_template = Template('''
 
 property_template = Template('''
     $property_name = property(lambda self: object(), lambda self, l:None, lambda self:None)
+        $property_doc                             
 ''')
 
 dotnet_platform = ''' 
