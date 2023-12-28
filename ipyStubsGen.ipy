@@ -175,7 +175,6 @@ for i in clr.References:
                                 for i in _descript[0].SelectNodes("*"):
                                     _prop_docs = _prop_docs + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
 
-                                # _prop_docs = "\"\"\"" + _prop_docs + "\"\"\""
                             except Exception as e:
                                 pass
                         _prop_line = property_template.substitute(property_name = _prop.Name,
@@ -192,6 +191,7 @@ for i in clr.References:
                                                 System.Reflection.BindingFlags.Public |
                                                 System.Reflection.BindingFlags.Instance)]
                 _metd_lines = []
+                
                 try:
                     for _metd in _ret_cls_methods:
                         if (_metd.Name.startswith("set_") or _metd.Name.startswith("get_")):
@@ -202,7 +202,18 @@ for i in clr.References:
                         if len(_metd_args) > 0: _metd_args = ", " + _metd_args
                         #
 
+                        metd_doc_str = ""
+                        # if xml doc then process it
+                        if asm_xmldocs:
+                            try:
+                                _descript = asm_doc.SelectNodes("//member[@name='M:" + _cls.FullName + "." + _metd.Name + "']")
+                                for i in _descript[0].SelectNodes("*"):
+                                    metd_doc_str = metd_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+                            except Exception as e:
+                                pass
+
                         _metd_line = method_template.substitute(method_name = _metd.Name, 
+                                                        metd_doc = metd_doc_str,
                                                         method_args = _metd_args,
                                                         return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_'))
                         _metd_lines.append(_metd_line)

@@ -43,6 +43,9 @@ init_template = Template('''
 ''')
 method_template = Template(''' 
     def $method_name(self$method_args):
+        """
+$metd_doc
+        """
         return $return_val
 ''')
 
