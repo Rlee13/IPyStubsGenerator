@@ -21,7 +21,7 @@ init_file_header_template = Template('''
 enum_template = Template('''
 class $enum_name(Enum):
     """
-    #: isEnum : $enum_type
+#: isEnum : $enum_type
 
 $enum_doc   
     """
@@ -31,7 +31,7 @@ $enum_doc
 class_template = Template('''
 class $class_name($class_base_type):
     """
-    #: isAbstract : $class_abstract
+#: isAbstract : $class_abstract
 
 $class_doc
     """
@@ -48,7 +48,9 @@ method_template = Template('''
 
 property_template = Template('''
     $property_name = property(lambda self: object(), lambda self, l:None, lambda self:None)
-        $property_doc
+    """
+$property_doc
+    """
 ''')
 
 dotnet_platform = ''' 

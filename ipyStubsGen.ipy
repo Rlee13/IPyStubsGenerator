@@ -173,9 +173,9 @@ for i in clr.References:
                             try:
                                 _descript = asm_doc.SelectNodes("//member[@name='P:" + _cls.FullName + "." + _prop.Name + "']")
                                 for i in _descript[0].SelectNodes("*"):
-                                    _prop_docs = _prop_docs + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+                                    _prop_docs = _prop_docs + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
 
-                                _prop_docs = "\"\"\"" + _prop_docs + "\"\"\""
+                                # _prop_docs = "\"\"\"" + _prop_docs + "\"\"\""
                             except Exception as e:
                                 pass
                         _prop_line = property_template.substitute(property_name = _prop.Name,
@@ -228,14 +228,36 @@ for i in clr.References:
                         _enm_lines = []
                         _enm_val = 0
                         _enm_line = ""
+                        enum_doc_str = ""
+                        # enum_field_doc_str = ""
                         for _x in System.Enum.GetValues(_cls):
+                            enum_field_doc_str = ""
                             _enm_line = str(_x) + " = " + str(_enm_val)
+                            # if xml doc then process it
+                            if asm_xmldocs:
+                                try:
+                                    # print("::::", _cls.FullName + "." + _x.ToString())
+                                    _descript = asm_doc.SelectNodes("//member[@name='F:" + _cls.FullName + "." + _x.ToString() + "']")
+                                    for i in _descript[0].SelectNodes("*"):
+                                        enum_field_doc_str = enum_field_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+                                except Exception as e:
+                                    pass                            
                             _enm_lines.append(_enm_line)
+                            _enm_lines.append("\"\"\"\n" + enum_field_doc_str + "\n    \"\"\"")
                             _enm_val += 1
+
+                        # if xml doc then process it
+                        if asm_xmldocs:
+                            try:
+                                _descript = asm_doc.SelectNodes("//member[@name='T:" + _cls.FullName + "']")
+                                for i in _descript[0].SelectNodes("*"):
+                                    enum_doc_str = enum_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+                            except Exception as e:
+                                pass
 
                         line = enum_template.substitute(enum_name = _cls.Name.rsplit('`',1)[0],
                                             enum_type = _cls.IsEnum,
-                                            enum_doc = "",
+                                            enum_doc = enum_doc_str,
                                             enum_body = "pass" if len(_enm_lines) == 0 else "\n    ".join(_enm_lines)
                                             ).rstrip()
                         nr_asm_enums += 1
@@ -244,11 +266,12 @@ for i in clr.References:
                         _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
                         class_body_str = _prop_body_str + _meth_body_str
 
+                        # if xml doc then process it
                         if asm_xmldocs:
                             try:
                                 _descript = asm_doc.SelectNodes("//member[@name='T:" + _cls.FullName + "']")
                                 for i in _descript[0].SelectNodes("*"):
-                                    class_doc_str = class_doc_str + "### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+                                    class_doc_str = class_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
                             except Exception as e:
                                 pass 
                         
