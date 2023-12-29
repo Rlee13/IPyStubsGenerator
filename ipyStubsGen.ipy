@@ -178,7 +178,7 @@ for i in clr.References:
                             except Exception as e:
                                 pass
                         _prop_line = property_template.substitute(property_name = _prop.Name,
-                                property_doc = _prop_docs if _prop_docs else ""
+                                property_doc = _prop_docs.strip() if _prop_docs else ""
                                 )
                         _prop_lines.append(_prop_line)
                 except Exception as e:
@@ -213,7 +213,7 @@ for i in clr.References:
                                 pass
 
                         _metd_line = method_template.substitute(method_name = _metd.Name, 
-                                                        metd_doc = metd_doc_str,
+                                                        metd_doc = metd_doc_str.strip(),
                                                         method_args = _metd_args,
                                                         return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_'))
                         _metd_lines.append(_metd_line)
@@ -254,7 +254,7 @@ for i in clr.References:
                                 except Exception as e:
                                     pass                            
                             _enm_lines.append(_enm_line)
-                            _enm_lines.append("\"\"\"\n" + enum_field_doc_str + "\n    \"\"\"")
+                            _enm_lines.append("\"\"\"\n" + enum_field_doc_str.strip() + "\n    \"\"\"")
                             _enm_val += 1
 
                         # if xml doc then process it
@@ -268,7 +268,7 @@ for i in clr.References:
 
                         line = enum_template.substitute(enum_name = _cls.Name.rsplit('`',1)[0],
                                             enum_type = _cls.IsEnum,
-                                            enum_doc = enum_doc_str,
+                                            enum_doc = enum_doc_str.strip(),
                                             enum_body = "pass" if len(_enm_lines) == 0 else "\n    ".join(_enm_lines)
                                             ).rstrip()
                         nr_asm_enums += 1
@@ -288,7 +288,7 @@ for i in clr.References:
                         
                         line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
                                             class_abstract = _cls.IsAbstract,
-                                            class_doc = class_doc_str,
+                                            class_doc = class_doc_str.strip(),
                                             class_body = class_body_str if len(class_body_str) > 0 else "pass",
                                             class_base_type = _ret_cls_base).rstrip()
                         nr_asm_clases += 1
