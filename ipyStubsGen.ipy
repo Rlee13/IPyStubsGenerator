@@ -67,7 +67,7 @@ common_asm = ["System", "Microsoft"]
 clr.AddReference("System.Diagnostics.FileVersionInfo")
 import System.Diagnostics.FileVersionInfo as FVI # type: ignore
 
-di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  "\\" + ASSEMBLY_NAME)
+di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  "/" + ASSEMBLY_NAME)
 if System.IO.Directory.Exists(di.ToString()):
     for _f in di.GetFiles():
         _f.Delete(); 
@@ -75,7 +75,7 @@ if System.IO.Directory.Exists(di.ToString()):
         _d.Delete(True)
 
 # check if xml doc available
-_asm_doc_filename = os.getcwd() + ASSEMBLIES_PATH +  "\\" + ASSEMBLY_NAME + ".xml"
+_asm_doc_filename = os.getcwd() + ASSEMBLIES_PATH +  "/" + ASSEMBLY_NAME + ".xml"
 if System.IO.File.Exists(_asm_doc_filename):
     clr.AddReference('System.Xml')
     from System.Xml import XmlDocument
@@ -123,10 +123,10 @@ for i in clr.References:
                 lines = []
 
                 # Create stubs' underlying folder(s) and file(s)
-                current_initfile_path = os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\") + "\\__init__.py"
+                current_initfile_path = os.getcwd() + STUBS_PATH + "/" + ns.replace('.', "/") + "/__init__.py"
                 if not System.IO.File.Exists(current_initfile_path):
                     try:
-                        System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "\\" + ns.replace('.', "\\"))
+                        System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + "/" + ns.replace('.', "/"))
                         current_initpy = System.IO.File.Create(current_initfile_path)
 
                         _init_line = init_file_header_template.substitute(
