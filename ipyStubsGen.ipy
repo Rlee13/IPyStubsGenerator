@@ -12,31 +12,37 @@ TEST = True
 ########
 
 _list_namespaces = False
-ASSEMBLY_NAME = "Eto"
+ASSEMBLY_NAME = ""
+# ASSEMBLY_NAME = "Eto"
 
 if (not clr.IsNetCoreApp):
     print(SG.dotnet_platform)
     sys.exit(1)
 
-arguments = System.Environment.GetCommandLineArgs()
-for arg in arguments:
-    if arg.startswith("--l"):
-        ASSEMBLY_NAME = arg[3:]
-        _list_namespaces = True
-        print(f"Modules contained in assembly {ASSEMBLY_NAME}:") # type: ignore
-        print("="*35)
-        break
-    elif arg.startswith("--f"):
-        ASSEMBLY_NAME = arg[3:]
-        break
-    elif arg.startswith("--h"):
-        _help_str = help_template.substitute(version = __version__)
-        print(_help_str)
-        sys.exit(1)    
-    elif TEST is not True:
-        print(SG.invalid_args_msg)
-        System.Console.ReadKey()
-        sys.exit(1)
+# Check the arguments
+arguments = sys.argv[1:]
+
+if not len(arguments) or arguments[0] == "--h":
+    _help_str = help_template.substitute(version = __version__)
+    print(_help_str)
+    sys.exit(0)
+
+if len(arguments) > 1:
+    print("\nERROR: Incorect number or arguments or unknown argument.")
+    print(arg_str)
+    sys.exit(1)
+
+if arguments[0].startswith("--l"):
+    ASSEMBLY_NAME = arguments[0][3:]
+    _list_namespaces = True
+    print(f"Modules contained in assembly {ASSEMBLY_NAME}:") # type: ignore
+    print("="*35)
+elif arguments[0].startswith("--f"):
+        ASSEMBLY_NAME = arguments[0][3:]
+else:
+    print("\nERROR: Incorect number or arguments or unknown argument.")
+    print(arg_str)
+    sys.exit(1)
 
 ######## CHANGE TO ARGS
 # ASSEMBLY_NAME = "Eto"

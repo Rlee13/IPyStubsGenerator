@@ -68,10 +68,6 @@ dependencies = '''
     ERROR:: Cannot import library:
 '''
 
-invalid_args_msg = ''' 
-
-    ipy.bat ipyStubsGen --f<PATH_TO_DLL_FILE>
-'''
 
 help_template = Template('''
 IronPython Stubs Generator for VSCode version $version
@@ -84,7 +80,6 @@ Arguments:
 
 General Usage:
 --------------
-- just download this project and unzip it in a folder.
 - place the .NET dll for which you generate the stubs in the 'Libs' folder. 
   If a xml file (VStudio doc comments) was provided, place it here too 
   (must have the same name as the assembly).
@@ -104,3 +99,19 @@ General Usage:
     "python.analysis.extraPaths": ["$${workspaceFolder}/.ipystubs"]
 
 ''')
+
+arg_str = '''
+
+Arguments:
+--------------
+--h          : this help message;
+--f<dllname> : generate stubs for the 'dllname' assembly;
+--l<dllname> : list the namespaces in the 'dllname' assembly;
+
+General Usage:
+--------------
+    ipy ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+
+- where 'ipy' is your IronPython 3.4 interpretor.
+
+'''
