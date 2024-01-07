@@ -70,5 +70,36 @@ dependencies = '''
 
 invalid_args_msg = ''' 
 
-    ipy.bat ipyStubsGen --f"PATH_TO_DLL_FILE"
+    ipy.bat ipyStubsGen --f<PATH_TO_DLL_FILE>
 '''
+
+help_template = Template('''
+IronPython Stubs Generator for VSCode version $version
+
+Arguments:
+--------------
+--h          : this help message;
+--f<dllname> : generate stubs for the 'dllname' assembly;
+
+General Usage:
+--------------
+- just download this project and unzip it in a folder.
+- place the .NET dll for which you generate the stubs in the 'Libs' folder. 
+  If a xml file (VStudio doc comments) was provided, place it here too 
+  (must have the same name as the assembly).
+- on Windows run: 
+
+    C:\...\IronPython34\\net6.0\ipy.bat ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+
+- on Linux run (if ipy dotnet tool was installed):
+
+    ipy ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+
+- the stubs files and folders are generated in the 'Stubs' folder.
+- copy the generated folder into the '.ipystubs' folder inside the project's stucture.
+- add to the .vscode\settings.json file in your project the following two lines:
+
+    "python.autoComplete.extraPaths": ["$${workspaceFolder}/.ipystubs"],
+    "python.analysis.extraPaths": ["$${workspaceFolder}/.ipystubs"]
+
+''')

@@ -14,7 +14,6 @@ TEST = True
 _list_namespaces = False
 ASSEMBLY_NAME = "Eto"
 
-
 if (not clr.IsNetCoreApp):
     print(SG.dotnet_platform)
     sys.exit(1)
@@ -30,6 +29,10 @@ for arg in arguments:
     elif arg.startswith("--f"):
         ASSEMBLY_NAME = arg[3:]
         break
+    elif arg.startswith("--h"):
+        _help_str = help_template.substitute(version = __version__)
+        print(_help_str)
+        sys.exit(1)    
     elif TEST is not True:
         print(SG.invalid_args_msg)
         System.Console.ReadKey()
@@ -49,9 +52,9 @@ except Exception as e:
     sys.exit(1)
 
 assembly_name = ASSEMBLY_NAME
-assembly = None # 'Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
+assembly = None # 'say, Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
 assembly_version = None
-asm_module = None # 'Eto.dll'
+asm_module = None # 'say, Eto.dll'
 nr_asm_clases = 0
 nr_asm_enums = 0
 nr_asm_skipped = 0
