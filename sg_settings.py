@@ -80,6 +80,7 @@ Arguments:
 --------------
 --h          : this help message;
 --f<dllname> : generate stubs for the 'dllname' assembly;
+--l<dllname> : list the namespaces in the 'dllname' assembly;
 
 General Usage:
 --------------

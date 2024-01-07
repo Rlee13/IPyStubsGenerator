@@ -24,7 +24,7 @@ for arg in arguments:
         ASSEMBLY_NAME = arg[3:]
         _list_namespaces = True
         print(f"Modules contained in assembly {ASSEMBLY_NAME}:") # type: ignore
-        print("="*75)
+        print("="*35)
         break
     elif arg.startswith("--f"):
         ASSEMBLY_NAME = arg[3:]

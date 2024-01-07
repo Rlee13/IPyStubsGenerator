@@ -4,7 +4,9 @@ Arguments:
 --------------
 --h          : this help message;
 
---f<dllname> : generate stubs for the 'dllname' assembly;
+--f&lt;dllname&gt; : generate stubs for the 'dllname' assembly;
+
+--l&lt;dllname&gt; : list the namespaces in the 'dllname' assembly;
 
 General Usage:
 --------------
