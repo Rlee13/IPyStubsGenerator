@@ -1,7 +1,9 @@
 from string import Template
 
-ASSEMBLIES_PATH = "/Libs"
+ASSEMBLIES_PATH = "Libs"
 STUBS_PATH = "/Stubs"
+TWIRL = "-\\|/"
+SHOW_PROGRESS = True
 
 init_file_header_template = Template('''
 # assembly_title            = $assembly_title
@@ -83,7 +85,7 @@ General Usage:
 - place the .NET dll for which you generate the stubs in the 'Libs' folder. 
   If a xml file (VStudio doc comments) was provided, place it here too 
   (must have the same name as the assembly).
-- on Windows run: 
+- on Windows run (current folder must be ipyStubsGen.ipy folder): 
 
     C:\...\IronPython34\\net6.0\ipy.bat ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
 

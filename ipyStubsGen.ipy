@@ -48,7 +48,7 @@ else:
 # ASSEMBLY_NAME = "Eto"
 ########
 
-sys.path.append(os.getcwd() + SG.ASSEMBLIES_PATH)
+sys.path.append(os.getcwd() + os.sep + SG.ASSEMBLIES_PATH)
 
 try:
     clr.AddReference(ASSEMBLY_NAME)
@@ -124,7 +124,15 @@ for i in clr.References:
             sys.exit()
             
         _ret_asm_types = [x for x in asm_module.GetTypes() if x.IsPublic]
+        _idx = 0
         for _cls in _ret_asm_types:
+
+            # progressing ...
+            if SG.SHOW_PROGRESS:
+                print("\r" + SG.TWIRL[_idx % 4], end = "", flush = True)
+                sys.stdout.write("\r" + SG.TWIRL[_idx % 4])
+                sys.stdout.flush()
+                _idx += 1
 
             if not _cls.Namespace.startswith(tuple(common_asm)):
                 ns = _cls.FullName.rsplit('.', 1)[0]
