@@ -215,7 +215,7 @@ for i in clr.References:
                             continue
                         # the the parameters
                         # TODO redo the arguments to represent the actual names/types
-                        _metd_args = ",".join([x.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') for x in _metd.GetParameters()])
+                        _metd_args = ",".join([x.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_').replace('&', '_') for x in _metd.GetParameters()])
                         if len(_metd_args) > 0: _metd_args = ", " + _metd_args
                         #
 
@@ -232,7 +232,7 @@ for i in clr.References:
                         _metd_line = method_template.substitute(method_name = _metd.Name, 
                                                         metd_doc = metd_doc_str.strip(),
                                                         method_args = _metd_args,
-                                                        return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_'))
+                                                        return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_').replace('&', '_'))
                         _metd_lines.append(_metd_line)
                 except Exception as e:
                     print(f"[ERROR]: {e}") # type: ignore
