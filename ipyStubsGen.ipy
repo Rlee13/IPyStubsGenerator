@@ -13,7 +13,6 @@ TEST = True
 
 _list_namespaces = False
 ASSEMBLY_NAME = ""
-# ASSEMBLY_NAME = "Eto"
 
 if (not clr.IsNetCoreApp):
     print(SG.dotnet_platform)
@@ -44,9 +43,7 @@ else:
     print(arg_str)
     sys.exit(1)
 
-######## CHANGE TO ARGS
-# ASSEMBLY_NAME = "Eto"
-########
+######## START
 
 sys.path.append(os.getcwd() + os.sep + SG.ASSEMBLIES_PATH)
 
@@ -264,7 +261,6 @@ for i in clr.References:
                             # if xml doc then process it
                             if asm_xmldocs:
                                 try:
-                                    # print("::::", _cls.FullName + "." + _x.ToString())
                                     _descript = asm_doc.SelectNodes("//member[@name='F:" + _cls.FullName + "." + _x.ToString() + "']")
                                     for i in _descript[0].SelectNodes("*"):
                                         enum_field_doc_str = enum_field_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"

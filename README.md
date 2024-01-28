@@ -40,3 +40,8 @@ ipy ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
 - Other similar tools:
 
   -- https://github.com/gtalarico/ironpython-stubs/
+
+
+# Tips
+
+- If run from VSCode (1.85.2) the progress twirl doesn't work, then set SHOW_PROGRESS (sg_settings.py) to False. (twirl solution copied from stackoverflow.com unknown page, pending credit).
