@@ -34,6 +34,8 @@ __version__ = "0.1.0"
 __author__ = "RLee"
 __repository__ = "https://github.com/Rlee13/IPyStubsGenerator"
 
+ASSEMBLY_NAME = ""
+
 ######## CHANGE TO False FOR RELEASE
 # TEST = True
 ########
@@ -348,7 +350,32 @@ __repository__ = "https://github.com/Rlee13/IPyStubsGenerator"
 def gen_stubs():
     print("Generating stubs files and folders...")
 
+
+def get_namespaces():
+    """
+    Returns a set containing the public assembly's modules/namespaces. 
+    The modules defined in 'common_asm' are ignored.
+    """
+    global ASSEMBLY_NAME
+
+    sys.path.append(os.getcwd() + os.sep + SG.ASSEMBLIES_PATH)
+    clr.AddReference(ASSEMBLY_NAME)
+
+    for i in clr.References:
+        if i.GetName().Name == ASSEMBLY_NAME:
+            assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
+            _x = assembly.GetModules()
+            for j in _x:
+                if not j.ToString().startswith(tuple(common_asm)):
+                    asm_module = j
+                    break
+            
+            asm_namespaces = set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])
+            return asm_namespaces
+
+
 def main(args = None):
+    global ASSEMBLY_NAME
 
     # check if .NET platform is present
     if (not clr.IsNetCoreApp):
@@ -358,13 +385,13 @@ def main(args = None):
         import argparse
         parser = argparse.ArgumentParser(prog="ipyStubsGen.ipy",
                                         description = SG.help_template + __version__)
-        parser.add_argument('-h1', '--morehelp', action='store_true', help='a more detailed help message.')
-        parser.add_argument('-f', '--filename', type=str, nargs='+', help='library name to analyse.')
-        
-        # if len(sys.argv) < 2:
-        #     parser.print_help()
-        #     sys.exit(1)
-            
+        parser.add_argument('-h1', '--morehelp', action='store_true', 
+                            help='a more detailed help message.')
+        parser.add_argument('-f', '--filename', type=str, nargs='+', 
+                            help='library name to analyse.')
+        parser.add_argument('-l', '--listns', type=str, 
+                            help='list the namespaces in the assembly and exit.')
+           
         options = parser.parse_args(args)
         
         if options.morehelp:
@@ -372,16 +399,32 @@ def main(args = None):
             
         elif options.filename:
             print(options.filename)
+            gen_stubs()
 
-        else:
+        elif options.listns:
+            ASSEMBLY_NAME = options.listns
+            _ns = get_namespaces()
+            if _ns:
+                _msg = f"Modules contained in assembly {ASSEMBLY_NAME}:" # type: ignore
+                print()
+                print(_msg) 
+                print("="*len(_msg))
+                print(_ns)
+
+        else: # if no arguments are given
             parser.print_help()
             sys.exit(1)
 
 if __name__ == '__main__':
     _ret = 1
+    
     try:
         main()
         _ret = 0
+    except OSError:
+        print(f"{SG.dependencies} {ASSEMBLY_NAME} from {SG.ASSEMBLIES_PATH + os.sep + ASSEMBLY_NAME}") # type: ignore
+    
     except Exception as e:
-        print('Error: %s' % e, file = sys.stderr)
+        print(f"{type(e)}:: {e}", file = sys.stderr) # type: ignore
+
     sys.exit(_ret)
