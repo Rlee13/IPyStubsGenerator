@@ -1,321 +1,387 @@
+"""
+IronPython Stubs Generator for VSCode
+
+General Usage:
+--------------
+- place the .NET dll for which you generate the stubs in the 'Libs' folder. 
+  If a xml file (VStudio doc comments) was provided, place it here too 
+  (must have the same name as the assembly).
+- on Windows run (current folder must be ipyStubsGen.ipy folder): 
+
+    C:\...\IronPython34\\net6.0\ipy.bat ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+
+- on Linux run (if ipy dotnet tool was installed):
+
+    ipy ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+
+- the stubs files and folders are generated in the 'Stubs' folder.
+- copy the generated folder into the '.ipystubs' folder inside the project's stucture.
+- add to the .vscode\settings.json file in your project the following two lines:
+
+    "python.autoComplete.extraPaths": ["${workspaceFolder}/.ipystubs"],
+    "python.analysis.extraPaths": ["${workspaceFolder}/.ipystubs"]
+
+"""
+
 import clr, sys, os
 
 import sg_settings as SG
 from sg_settings import *
 
-import System
+# import System
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 __author__ = "RLee"
+__repository__ = "https://github.com/Rlee13/IPyStubsGenerator"
+
 ######## CHANGE TO False FOR RELEASE
-TEST = True
+# TEST = True
 ########
 
-_list_namespaces = False
-ASSEMBLY_NAME = ""
+# _list_namespaces = False
+# ASSEMBLY_NAME = ""
 
-if (not clr.IsNetCoreApp):
-    print(SG.dotnet_platform)
-    sys.exit(1)
+# if (not clr.IsNetCoreApp):
+#     print(SG.dotnet_platform)
+#     sys.exit(1)
 
-# Check the arguments
-arguments = sys.argv[1:]
+# # Check the arguments
+# arguments = sys.argv[1:]
 
-if not len(arguments) or arguments[0] == "--h":
-    _help_str = help_template.substitute(version = __version__)
-    print(_help_str)
-    sys.exit(0)
+# if not len(arguments) or arguments[0] == "--h":
+#     _help_str = help_template.substitute(version = __version__)
+#     print(_help_str)
+#     sys.exit(0)
 
-if len(arguments) > 1:
-    print("\nERROR: Incorect number or arguments or unknown argument.")
-    print(arg_str)
-    sys.exit(1)
+# if len(arguments) > 1:
+#     print("\nERROR: Incorect number or arguments or unknown argument.")
+#     print(arg_str)
+#     sys.exit(1)
 
-if arguments[0].startswith("--l"):
-    ASSEMBLY_NAME = arguments[0][3:]
-    _list_namespaces = True
-    print(f"Modules contained in assembly {ASSEMBLY_NAME}:") # type: ignore
-    print("="*35)
-elif arguments[0].startswith("--f"):
-        ASSEMBLY_NAME = arguments[0][3:]
-else:
-    print("\nERROR: Incorect number or arguments or unknown argument.")
-    print(arg_str)
-    sys.exit(1)
+# if arguments[0].startswith("--l"):
+#     ASSEMBLY_NAME = arguments[0][3:]
+#     _list_namespaces = True
+#     print(f"Modules contained in assembly {ASSEMBLY_NAME}:") # type: ignore
+#     print("="*35)
+# elif arguments[0].startswith("--f"):
+#         ASSEMBLY_NAME = arguments[0][3:]
+# else:
+#     print("\nERROR: Incorect number or arguments or unknown argument.")
+#     print(arg_str)
+#     sys.exit(1)
 
-######## START
+# ######## START
 
-sys.path.append(os.getcwd() + os.sep + SG.ASSEMBLIES_PATH)
+# sys.path.append(os.getcwd() + os.sep + SG.ASSEMBLIES_PATH)
 
-try:
-    clr.AddReference(ASSEMBLY_NAME)
-except Exception as e:
-    print(SG.dependencies)
-    print("\t\t\t" + ASSEMBLY_NAME, "from ", SG.ASSEMBLIES_PATH + os.sep + ASSEMBLY_NAME + ".dll")
-    sys.exit(1)
+# try:
+#     clr.AddReference(ASSEMBLY_NAME)
+# except Exception as e:
+#     print(SG.dependencies)
+#     print("\t\t\t" + ASSEMBLY_NAME, "from ", SG.ASSEMBLIES_PATH + os.sep + ASSEMBLY_NAME + ".dll")
+#     sys.exit(1)
 
-assembly_name = ASSEMBLY_NAME
-assembly = None # 'say, Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
-assembly_version = None
-asm_module = None # 'say, Eto.dll'
-nr_asm_clases = 0
-nr_asm_enums = 0
-nr_asm_skipped = 0
-asm_namespaces = set()
-# nr_asm_namespaces = 0
-current_initpy = None
-asm_xmldocs = True
-asm_doc = None
+# assembly_name = ASSEMBLY_NAME
+# assembly = None # 'say, Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
+# assembly_version = None
+# asm_module = None # 'say, Eto.dll'
+# nr_asm_clases = 0
+# nr_asm_enums = 0
+# nr_asm_skipped = 0
+# asm_namespaces = set()
+# # nr_asm_namespaces = 0
+# current_initpy = None
+# asm_xmldocs = True
+# asm_doc = None
 
-# common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
-common_asm = ["System", "Microsoft"]
+# # common_asm = ["System", "Microsoft", "IronPython", "netstandard", "Mono", "ipy", "Snippets.scripting"]
+# common_asm = ["System", "Microsoft"]
 
-clr.AddReference("System.Diagnostics.FileVersionInfo")
-import System.Diagnostics.FileVersionInfo as FVI # type: ignore
+# clr.AddReference("System.Diagnostics.FileVersionInfo")
+# import System.Diagnostics.FileVersionInfo as FVI # type: ignore
 
-di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  os.sep + ASSEMBLY_NAME)
-if System.IO.Directory.Exists(di.ToString()):
-    for _f in di.GetFiles():
-        _f.Delete(); 
-    for _d in di.GetDirectories():
-        _d.Delete(True)
+# di = System.IO.DirectoryInfo(os.getcwd() + STUBS_PATH +  os.sep + ASSEMBLY_NAME)
+# if System.IO.Directory.Exists(di.ToString()):
+#     for _f in di.GetFiles():
+#         _f.Delete(); 
+#     for _d in di.GetDirectories():
+#         _d.Delete(True)
 
-# check if xml doc available
-_asm_doc_filename = os.getcwd() + ASSEMBLIES_PATH +  os.sep + ASSEMBLY_NAME + ".xml"
-if System.IO.File.Exists(_asm_doc_filename):
-    clr.AddReference('System.Xml')
-    from System.Xml import XmlDocument
+# # check if xml doc available
+# _asm_doc_filename = os.getcwd() + ASSEMBLIES_PATH +  os.sep + ASSEMBLY_NAME + ".xml"
+# if System.IO.File.Exists(_asm_doc_filename):
+#     clr.AddReference('System.Xml')
+#     from System.Xml import XmlDocument
+#     try:
+#         asm_xmldocs = True
+#         asm_doc = XmlDocument()
+#         asm_doc.Load(_asm_doc_filename)
+#     except Exception as e:
+#         print("[XML ERROR:]", e)
+
+# for i in clr.References:
+#     if i.GetName().Name == assembly_name:
+#         assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
+#         assembly_version = assembly.GetName().Version.ToString()
+
+#         _atf = assembly.GetCustomAttributes(System.Runtime.Versioning.TargetFrameworkAttribute, False)
+#         assembly_target_framework = _atf[0].FrameworkDisplayName if len(_atf) > 0 else ""
+            
+#         _asl = FVI.GetVersionInfo(assembly.Location)
+#         file_version         = _asl.FileVersion.ToString()
+#         product_version      = _asl.ProductVersion.ToString()
+#         assembly_title       = _asl.FileDescription
+#         assembly_description = _asl.Comments
+#         assembly_product     = _asl.ProductName
+#         assembly_company     = _asl.CompanyName
+#         assembly_copyright   = _asl.LegalCopyright
+#         assembly_trademark   = _asl.LegalTrademarks
+
+#         _x = assembly.GetModules()
+#         for j in _x:
+#             if not j.ToString().startswith(tuple(common_asm)):
+#                 asm_module = j
+#                 break
+
+#         if _list_namespaces:
+#             print("\n".join(set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])))
+#             sys.exit()
+            
+#         _ret_asm_types = [x for x in asm_module.GetTypes() if x.IsPublic]
+#         _idx = 0
+#         for _cls in _ret_asm_types:
+
+#             # progressing ...
+#             if SG.SHOW_PROGRESS:
+#                 print("\r" + SG.TWIRL[_idx % 4], end = "", flush = True)
+#                 sys.stdout.write("\r" + SG.TWIRL[_idx % 4])
+#                 sys.stdout.flush()
+#                 _idx += 1
+
+#             if not _cls.Namespace.startswith(tuple(common_asm)):
+#                 ns = _cls.FullName.rsplit('.', 1)[0]
+#                 asm_namespaces.add(ns)
+#                 lines = []
+
+#                 # Create stubs' underlying folder(s) and file(s)
+#                 current_initfile_path = os.getcwd() + STUBS_PATH + os.sep + ns.replace('.', os.sep) + os.sep + "__init__.py"
+#                 if not System.IO.File.Exists(current_initfile_path):
+#                     try:
+#                         System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + os.sep + ns.replace('.', os.sep))
+#                         current_initpy = System.IO.File.Create(current_initfile_path)
+
+#                         _init_line = init_file_header_template.substitute(
+#                                 assembly_version = assembly_version, 
+#                                 assembly_target_framework = assembly_target_framework,
+#                                 file_version = file_version,
+#                                 product_version = product_version, 
+#                                 assembly_title = assembly_title,
+#                                 assembly_description = assembly_description,
+#                                 assembly_product = assembly_product,
+#                                 assembly_company = assembly_company,
+#                                 assembly_copyright = assembly_copyright, 
+#                                 assembly_trademark = assembly_trademark,
+#                                 version = __version__
+#                         )
+                        
+#                         current_initpy.Write(System.Text.Encoding.UTF8.GetBytes(_init_line), 0, len(_init_line))
+#                         current_initpy.Close()
+#                     except Exception as e:
+#                         print("[IO ERROR:]", e)
+#                         sys.exit(1)
+
+#                 # get all properties
+#                 _ret_cls_prop = [x for x in _cls.GetProperties(System.Reflection.BindingFlags.Instance | 
+#                                                     System.Reflection.BindingFlags.Static | 
+#                                                     System.Reflection.BindingFlags.Public)]
+#                 # ignore if it is compiler generated
+#                 _compgen = False
+#                 for _p in _ret_cls_prop:               
+#                     _attr = _p.GetCustomAttributes(True)
+#                     for _a in _attr:
+#                         if type(_a) is type(System.Runtime.CompilerServices.CompilerGeneratedAttribute):
+#                             _compgen = True
+#                             break
+#                 if _compgen:
+#                     continue
+                
+#                 _prop_lines = []
+                
+#                 try:
+#                     for _prop in _ret_cls_prop:
+#                         _prop_docs = ""
+#                         if asm_xmldocs:
+#                             try:
+#                                 _descript = asm_doc.SelectNodes("//member[@name='P:" + _cls.FullName + "." + _prop.Name + "']")
+#                                 for i in _descript[0].SelectNodes("*"):
+#                                     _prop_docs = _prop_docs + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+
+#                             except Exception as e:
+#                                 pass
+#                         _prop_line = property_template.substitute(property_name = _prop.Name,
+#                                 property_doc = _prop_docs.strip() if _prop_docs else ""
+#                                 )
+#                         _prop_lines.append(_prop_line)
+#                 except Exception as e:
+#                     print(f"[ERROR]: {e}") # type: ignore
+#                     sys.exit(1)
+#                 _prop_body_str = "".join(_prop_lines)
+
+#                 # get all methods
+#                 _ret_cls_methods = [x for x in _cls.GetMethods(System.Reflection.BindingFlags.DeclaredOnly |
+#                                                 System.Reflection.BindingFlags.Public |
+#                                                 System.Reflection.BindingFlags.Instance)]
+#                 _metd_lines = []
+                
+#                 try:
+#                     for _metd in _ret_cls_methods:
+#                         if (_metd.Name.startswith("set_") or _metd.Name.startswith("get_")):
+#                             continue
+#                         # the the parameters
+#                         # TODO redo the arguments to represent the actual names/types
+#                         _metd_args = ",".join([x.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_').replace('&', '_') for x in _metd.GetParameters()])
+#                         if len(_metd_args) > 0: _metd_args = ", " + _metd_args
+#                         #
+
+#                         metd_doc_str = ""
+#                         # if xml doc then process it
+#                         if asm_xmldocs:
+#                             try:
+#                                 _descript = asm_doc.SelectNodes("//member[@name='M:" + _cls.FullName + "." + _metd.Name + "']")
+#                                 for i in _descript[0].SelectNodes("*"):
+#                                     metd_doc_str = metd_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+#                             except Exception as e:
+#                                 pass
+
+#                         _metd_line = method_template.substitute(method_name = _metd.Name, 
+#                                                         metd_doc = metd_doc_str.strip(),
+#                                                         method_args = _metd_args,
+#                                                         return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_').replace('&', '_'))
+#                         _metd_lines.append(_metd_line)
+#                 except Exception as e:
+#                     print(f"[ERROR]: {e}") # type: ignore
+#                     sys.exit(1)
+#                 _meth_body_str = "".join(_metd_lines)
+
+#                 # get class Base type 
+#                 # TODO Interface
+#                 _cbt = ""
+#                 try:
+#                     _cbt = _cls.BaseType.ToString()
+#                 except Exception as e:
+#                     # print(f"[ERROR]: {e}")
+#                     # sys.exit(1)
+#                     nr_asm_skipped += 1
+#                     continue
+
+#                 # test if enum or class TODO get real values for the enums fields
+#                 if _cbt is not "":
+#                     if _cbt == "System.Enum":
+#                         _enm_lines = []
+#                         _enm_val = 0
+#                         _enm_line = ""
+#                         enum_doc_str = ""
+#                         # enum_field_doc_str = ""
+#                         for _x in System.Enum.GetValues(_cls):
+#                             enum_field_doc_str = ""
+#                             _enm_line = str(_x) + " = " + str(_enm_val)
+#                             # if xml doc then process it
+#                             if asm_xmldocs:
+#                                 try:
+#                                     _descript = asm_doc.SelectNodes("//member[@name='F:" + _cls.FullName + "." + _x.ToString() + "']")
+#                                     for i in _descript[0].SelectNodes("*"):
+#                                         enum_field_doc_str = enum_field_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+#                                 except Exception as e:
+#                                     pass                            
+#                             _enm_lines.append(_enm_line)
+#                             _enm_lines.append("\"\"\"\n" + enum_field_doc_str.strip() + "\n    \"\"\"")
+#                             _enm_val += 1
+
+#                         # if xml doc then process it
+#                         if asm_xmldocs:
+#                             try:
+#                                 _descript = asm_doc.SelectNodes("//member[@name='T:" + _cls.FullName + "']")
+#                                 for i in _descript[0].SelectNodes("*"):
+#                                     enum_doc_str = enum_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+#                             except Exception as e:
+#                                 pass
+
+#                         line = enum_template.substitute(enum_name = _cls.Name.rsplit('`',1)[0],
+#                                             enum_type = _cls.IsEnum,
+#                                             enum_doc = enum_doc_str.strip(),
+#                                             enum_body = "pass" if len(_enm_lines) == 0 else "\n    ".join(_enm_lines)
+#                                             ).rstrip()
+#                         nr_asm_enums += 1
+#                     else:
+#                         class_doc_str = ""
+#                         _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
+#                         class_body_str = _prop_body_str + _meth_body_str
+
+#                         # if xml doc then process it
+#                         if asm_xmldocs:
+#                             try:
+#                                 _descript = asm_doc.SelectNodes("//member[@name='T:" + _cls.FullName + "']")
+#                                 for i in _descript[0].SelectNodes("*"):
+#                                     class_doc_str = class_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
+#                             except Exception as e:
+#                                 pass 
+                        
+#                         line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
+#                                             class_abstract = _cls.IsAbstract,
+#                                             class_doc = class_doc_str.strip(),
+#                                             class_body = class_body_str if len(class_body_str) > 0 else "pass",
+#                                             class_base_type = _ret_cls_base).rstrip()
+#                         nr_asm_clases += 1
+
+#                 lines.append(line)
+                
+#                 try: 
+#                     System.IO.File.AppendAllLines(current_initfile_path, lines)
+#                     if current_initpy is not None: current_initpy.Close()
+#                 except Exception as e:
+#                     exc_type, exc_obj, exc_tb = sys.exc_info()
+#                     print("[IO ERROR:]", exc_tb.tb_lineno, e)
+#                     sys.exit(1)
+
+# print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes, {nr_asm_enums} enums, {nr_asm_skipped} skipped.") # type: ignore
+
+def gen_stubs():
+    print("Generating stubs files and folders...")
+
+def main(args = None):
+
+    # check if .NET platform is present
+    if (not clr.IsNetCoreApp):
+        # raise "wrong platform"
+        raise ValueError(SG.dotnet_platform)
+    else:
+        import argparse
+        parser = argparse.ArgumentParser(prog="ipyStubsGen.ipy",
+                                        description = SG.help_template + __version__)
+        parser.add_argument('-h1', '--morehelp', action='store_true', help='a more detailed help message.')
+        parser.add_argument('-f', '--filename', type=str, nargs='+', help='library name to analyse.')
+        
+        # if len(sys.argv) < 2:
+        #     parser.print_help()
+        #     sys.exit(1)
+            
+        options = parser.parse_args(args)
+        
+        if options.morehelp:
+            print(help_template0.substitute(version = __version__))
+            
+        elif options.filename:
+            print(options.filename)
+
+        else:
+            parser.print_help()
+            sys.exit(1)
+
+if __name__ == '__main__':
+    _ret = 1
     try:
-        asm_xmldocs = True
-        asm_doc = XmlDocument()
-        asm_doc.Load(_asm_doc_filename)
+        main()
+        _ret = 0
     except Exception as e:
-        print("[XML ERROR:]", e)
-
-for i in clr.References:
-    if i.GetName().Name == assembly_name:
-        assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
-        assembly_version = assembly.GetName().Version.ToString()
-
-        _atf = assembly.GetCustomAttributes(System.Runtime.Versioning.TargetFrameworkAttribute, False)
-        assembly_target_framework = _atf[0].FrameworkDisplayName if len(_atf) > 0 else ""
-            
-        _asl = FVI.GetVersionInfo(assembly.Location)
-        file_version         = _asl.FileVersion.ToString()
-        product_version      = _asl.ProductVersion.ToString()
-        assembly_title       = _asl.FileDescription
-        assembly_description = _asl.Comments
-        assembly_product     = _asl.ProductName
-        assembly_company     = _asl.CompanyName
-        assembly_copyright   = _asl.LegalCopyright
-        assembly_trademark   = _asl.LegalTrademarks
-
-        _x = assembly.GetModules()
-        for j in _x:
-            if not j.ToString().startswith(tuple(common_asm)):
-                asm_module = j
-                break
-
-        if _list_namespaces:
-            print("\n".join(set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])))
-            sys.exit()
-            
-        _ret_asm_types = [x for x in asm_module.GetTypes() if x.IsPublic]
-        _idx = 0
-        for _cls in _ret_asm_types:
-
-            # progressing ...
-            if SG.SHOW_PROGRESS:
-                print("\r" + SG.TWIRL[_idx % 4], end = "", flush = True)
-                sys.stdout.write("\r" + SG.TWIRL[_idx % 4])
-                sys.stdout.flush()
-                _idx += 1
-
-            if not _cls.Namespace.startswith(tuple(common_asm)):
-                ns = _cls.FullName.rsplit('.', 1)[0]
-                asm_namespaces.add(ns)
-                lines = []
-
-                # Create stubs' underlying folder(s) and file(s)
-                current_initfile_path = os.getcwd() + STUBS_PATH + os.sep + ns.replace('.', os.sep) + os.sep + "__init__.py"
-                if not System.IO.File.Exists(current_initfile_path):
-                    try:
-                        System.IO.Directory.CreateDirectory(os.getcwd() + STUBS_PATH + os.sep + ns.replace('.', os.sep))
-                        current_initpy = System.IO.File.Create(current_initfile_path)
-
-                        _init_line = init_file_header_template.substitute(
-                                assembly_version = assembly_version, 
-                                assembly_target_framework = assembly_target_framework,
-                                file_version = file_version,
-                                product_version = product_version, 
-                                assembly_title = assembly_title,
-                                assembly_description = assembly_description,
-                                assembly_product = assembly_product,
-                                assembly_company = assembly_company,
-                                assembly_copyright = assembly_copyright, 
-                                assembly_trademark = assembly_trademark,
-                                version = __version__
-                        )
-                        
-                        current_initpy.Write(System.Text.Encoding.UTF8.GetBytes(_init_line), 0, len(_init_line))
-                        current_initpy.Close()
-                    except Exception as e:
-                        print("[IO ERROR:]", e)
-                        sys.exit(1)
-
-                # get all properties
-                _ret_cls_prop = [x for x in _cls.GetProperties(System.Reflection.BindingFlags.Instance | 
-                                                    System.Reflection.BindingFlags.Static | 
-                                                    System.Reflection.BindingFlags.Public)]
-                # ignore if it is compiler generated
-                _compgen = False
-                for _p in _ret_cls_prop:               
-                    _attr = _p.GetCustomAttributes(True)
-                    for _a in _attr:
-                        if type(_a) is type(System.Runtime.CompilerServices.CompilerGeneratedAttribute):
-                            _compgen = True
-                            break
-                if _compgen:
-                    continue
-                
-                _prop_lines = []
-                
-                try:
-                    for _prop in _ret_cls_prop:
-                        _prop_docs = ""
-                        if asm_xmldocs:
-                            try:
-                                _descript = asm_doc.SelectNodes("//member[@name='P:" + _cls.FullName + "." + _prop.Name + "']")
-                                for i in _descript[0].SelectNodes("*"):
-                                    _prop_docs = _prop_docs + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
-
-                            except Exception as e:
-                                pass
-                        _prop_line = property_template.substitute(property_name = _prop.Name,
-                                property_doc = _prop_docs.strip() if _prop_docs else ""
-                                )
-                        _prop_lines.append(_prop_line)
-                except Exception as e:
-                    print(f"[ERROR]: {e}") # type: ignore
-                    sys.exit(1)
-                _prop_body_str = "".join(_prop_lines)
-
-                # get all methods
-                _ret_cls_methods = [x for x in _cls.GetMethods(System.Reflection.BindingFlags.DeclaredOnly |
-                                                System.Reflection.BindingFlags.Public |
-                                                System.Reflection.BindingFlags.Instance)]
-                _metd_lines = []
-                
-                try:
-                    for _metd in _ret_cls_methods:
-                        if (_metd.Name.startswith("set_") or _metd.Name.startswith("get_")):
-                            continue
-                        # the the parameters
-                        # TODO redo the arguments to represent the actual names/types
-                        _metd_args = ",".join([x.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_').replace('&', '_') for x in _metd.GetParameters()])
-                        if len(_metd_args) > 0: _metd_args = ", " + _metd_args
-                        #
-
-                        metd_doc_str = ""
-                        # if xml doc then process it
-                        if asm_xmldocs:
-                            try:
-                                _descript = asm_doc.SelectNodes("//member[@name='M:" + _cls.FullName + "." + _metd.Name + "']")
-                                for i in _descript[0].SelectNodes("*"):
-                                    metd_doc_str = metd_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
-                            except Exception as e:
-                                pass
-
-                        _metd_line = method_template.substitute(method_name = _metd.Name, 
-                                                        metd_doc = metd_doc_str.strip(),
-                                                        method_args = _metd_args,
-                                                        return_val = _metd.ReturnParameter.ToString().replace(' ', '_').replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_').replace('&', '_'))
-                        _metd_lines.append(_metd_line)
-                except Exception as e:
-                    print(f"[ERROR]: {e}") # type: ignore
-                    sys.exit(1)
-                _meth_body_str = "".join(_metd_lines)
-
-                # get class Base type 
-                # TODO Interface
-                _cbt = ""
-                try:
-                    _cbt = _cls.BaseType.ToString()
-                except Exception as e:
-                    # print(f"[ERROR]: {e}")
-                    # sys.exit(1)
-                    nr_asm_skipped += 1
-                    continue
-
-                # test if enum or class TODO get real values for the enums fields
-                if _cbt is not "":
-                    if _cbt == "System.Enum":
-                        _enm_lines = []
-                        _enm_val = 0
-                        _enm_line = ""
-                        enum_doc_str = ""
-                        # enum_field_doc_str = ""
-                        for _x in System.Enum.GetValues(_cls):
-                            enum_field_doc_str = ""
-                            _enm_line = str(_x) + " = " + str(_enm_val)
-                            # if xml doc then process it
-                            if asm_xmldocs:
-                                try:
-                                    _descript = asm_doc.SelectNodes("//member[@name='F:" + _cls.FullName + "." + _x.ToString() + "']")
-                                    for i in _descript[0].SelectNodes("*"):
-                                        enum_field_doc_str = enum_field_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
-                                except Exception as e:
-                                    pass                            
-                            _enm_lines.append(_enm_line)
-                            _enm_lines.append("\"\"\"\n" + enum_field_doc_str.strip() + "\n    \"\"\"")
-                            _enm_val += 1
-
-                        # if xml doc then process it
-                        if asm_xmldocs:
-                            try:
-                                _descript = asm_doc.SelectNodes("//member[@name='T:" + _cls.FullName + "']")
-                                for i in _descript[0].SelectNodes("*"):
-                                    enum_doc_str = enum_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
-                            except Exception as e:
-                                pass
-
-                        line = enum_template.substitute(enum_name = _cls.Name.rsplit('`',1)[0],
-                                            enum_type = _cls.IsEnum,
-                                            enum_doc = enum_doc_str.strip(),
-                                            enum_body = "pass" if len(_enm_lines) == 0 else "\n    ".join(_enm_lines)
-                                            ).rstrip()
-                        nr_asm_enums += 1
-                    else:
-                        class_doc_str = ""
-                        _ret_cls_base = _cls.BaseType.ToString().replace('.', "").replace('`', '_').replace('[', '_').replace(']', '_') if _cls.BaseType is not None else ""
-                        class_body_str = _prop_body_str + _meth_body_str
-
-                        # if xml doc then process it
-                        if asm_xmldocs:
-                            try:
-                                _descript = asm_doc.SelectNodes("//member[@name='T:" + _cls.FullName + "']")
-                                for i in _descript[0].SelectNodes("*"):
-                                    class_doc_str = class_doc_str + "#### " + i.Name.capitalize() + "\n - " + i.InnerText.strip() + "\n\n"
-                            except Exception as e:
-                                pass 
-                        
-                        line = class_template.substitute(class_name = _cls.Name.rsplit('`',1)[0],
-                                            class_abstract = _cls.IsAbstract,
-                                            class_doc = class_doc_str.strip(),
-                                            class_body = class_body_str if len(class_body_str) > 0 else "pass",
-                                            class_base_type = _ret_cls_base).rstrip()
-                        nr_asm_clases += 1
-
-                lines.append(line)
-                
-                try: 
-                    System.IO.File.AppendAllLines(current_initfile_path, lines)
-                    if current_initpy is not None: current_initpy.Close()
-                except Exception as e:
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    print("[IO ERROR:]", exc_tb.tb_lineno, e)
-                    sys.exit(1)
-
-print(f"\nProcessed {len(asm_namespaces)} namespaces, {nr_asm_clases} classes, {nr_asm_enums} enums, {nr_asm_skipped} skipped.") # type: ignore
-
-
+        print('Error: %s' % e, file = sys.stderr)
+    sys.exit(_ret)
