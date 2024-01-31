@@ -1,7 +1,7 @@
 from string import Template
 
 ASSEMBLIES_PATH = "Libs"
-STUBS_PATH = "/Stubs"
+STUBS_PATH = "Stubs"
 TWIRL = "-\\|/"
 SHOW_PROGRESS = True
 
@@ -77,9 +77,9 @@ Arguments:
 --------------
 -h, --help                  : a help message;
 -h1, --morehelp             : a more detailed help message;                          
--f FILENAME [FILENAME ...], --filename FILENAME [FILENAME ...] 
+-f FILENAME, --filename FILENAME 
                             : generate stubs for the 'filename' assembly;
--l DLLNAME, --list DLLNAME  : list the namespaces in the 'dllname' assembly;
+-l DLLNAME, --listns DLLNAME  : list the namespaces in the 'dllname' assembly;
 
 General Usage:
 --------------
@@ -88,11 +88,11 @@ General Usage:
   (must have the same name as the assembly).
 - on Windows run (current folder must be ipyStubsGen.ipy folder): 
 
-    C:\...\IronPython34\\net6.0\ipy.bat ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+    C:\...\IronPython34\\net6.0\ipy.bat ipyStubsGen.ipy -f <name_of_the_dll_placed_in_Libs_folder>
 
 - on Linux run (if ipy dotnet tool was installed):
 
-    ipy ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+    ipy ipyStubsGen.ipy -f <name_of_the_dll_placed_in_Libs_folder>
 
 - the stubs files and folders are generated in the 'Stubs' folder.
 - copy the generated folder into the '.ipystubs' folder inside the project's stucture.

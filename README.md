@@ -2,11 +2,13 @@
 
 Arguments:
 --------------
---h          : this help message;
+-h          : a help message;
 
---f&lt;dllname&gt; : generate stubs for the 'dllname' assembly;
+-h1          : a more detailed help message;
 
---l&lt;dllname&gt; : list the namespaces in the 'dllname' assembly;
+-f &lt;dllname&gt; : generate stubs for the 'dllname' assembly;
+
+-l &lt;dllname&gt; : list the namespaces in the 'dllname' assembly;
 
 General Usage:
 --------------
@@ -17,13 +19,13 @@ General Usage:
 - on Windows run:
 
 ```
-C:\...\IronPython34\net6.0\ipy.bat ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+C:\...\IronPython34\net6.0\ipy.bat ipyStubsGen.ipy -f <name_of_the_dll_placed_in_Libs_folder>
 ```
 
 - on Linux run (if ipy dotnet tool was installed):
 
 ```
-ipy ipyStubsGen.ipy --f<name_of_the_dll_placed_in_Libs_folder>
+ipy ipyStubsGen.ipy -f <name_of_the_dll_placed_in_Libs_folder>
 ```
 
 - the stubs files and folders are generated in the 'Stubs' folder.
