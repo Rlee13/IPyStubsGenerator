@@ -94,7 +94,7 @@ def gen_stubs():
             file_version         = _asl.FileVersion.ToString()
             product_version      = _asl.ProductVersion.ToString()
             assembly_title       = _asl.FileDescription
-            assembly_description = _asl.Comments
+            assembly_description = _asl.Comments.replace("\n", "\n#")
             assembly_product     = _asl.ProductName
             assembly_company     = _asl.CompanyName
             assembly_copyright   = _asl.LegalCopyright
