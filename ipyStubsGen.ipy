@@ -28,7 +28,7 @@ import clr, sys, os
 import sg_settings as SG
 from sg_settings import *
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "RLee"
 __repository__ = "https://github.com/Rlee13/IPyStubsGenerator"
 
