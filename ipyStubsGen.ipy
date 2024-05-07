@@ -28,7 +28,7 @@ import clr, sys, os
 import sg_settings as SG
 from sg_settings import *
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "RLee"
 __repository__ = "https://github.com/Rlee13/IPyStubsGenerator"
 
@@ -310,6 +310,7 @@ def get_namespaces():
         if i.GetName().Name == ASSEMBLY_NAME:
             assembly = i # Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null
             _x = assembly.GetModules()
+            
             for j in _x:
                 if not j.ToString().startswith(tuple(common_asm)):
                     asm_module = j
@@ -344,10 +345,14 @@ def main(args = None):
             
         elif options.filename:
             ASSEMBLY_NAME = options.filename
+            if ASSEMBLY_NAME.endswith(".dll"):
+                ASSEMBLY_NAME = ASSEMBLY_NAME[:-4]
             gen_stubs()
 
         elif options.listns:
             ASSEMBLY_NAME = options.listns
+            if ASSEMBLY_NAME.endswith(".dll"):
+                ASSEMBLY_NAME = ASSEMBLY_NAME[:-4]
             _ns = get_namespaces()
             if _ns:
                 _msg = f"Modules contained in assembly {ASSEMBLY_NAME}:" # type: ignore
@@ -355,6 +360,8 @@ def main(args = None):
                 print(_msg) 
                 print("="*len(_msg))
                 print("\n".join(_ns))
+            else:
+                print("Cannot show the list of namespaces in the assembly. Exit now...")
 
         else: # if no arguments are given
             parser.print_help()
