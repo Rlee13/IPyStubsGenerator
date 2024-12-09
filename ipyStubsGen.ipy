@@ -23,7 +23,7 @@ General Usage:
 
 """
 
-import clr, sys, os
+import clr, sys, os, traceback
 
 import sg_settings as SG
 from sg_settings import *
@@ -33,14 +33,15 @@ __author__ = "RLee"
 __repository__ = "https://github.com/Rlee13/IPyStubsGenerator"
 
 ASSEMBLY_NAME = ""
-
+asm_module = None # ' Eto.dll'
+asm_namespaces = set()
 
 def gen_stubs():
     """
     Generates the stubs.
     Destination folder is ./Stubs
     """
-    global ASSEMBLY_NAME
+    global ASSEMBLY_NAME, asm_module, asm_namespaces
 
     sys.path.append(os.getcwd() + os.sep + SG.ASSEMBLIES_PATH)
     clr.AddReference(ASSEMBLY_NAME)
@@ -48,11 +49,11 @@ def gen_stubs():
     assembly_name = ASSEMBLY_NAME
     assembly = None # ' Eto, Version=2.7.0.0, Culture=neutral, PublicKeyToken=null'
     assembly_version = None
-    asm_module = None # ' Eto.dll'
+    
     nr_asm_clases = 0
     nr_asm_enums = 0
     nr_asm_skipped = 0
-    asm_namespaces = set()
+    
     current_initpy = None
     asm_xmldocs = True
     asm_doc = None
@@ -301,7 +302,7 @@ def get_namespaces():
     Returns a set containing the public assembly's modules/namespaces. 
     The modules defined in 'common_asm' are ignored.
     """
-    global ASSEMBLY_NAME
+    global ASSEMBLY_NAME, asm_module, asm_namespaces
 
     sys.path.append(os.getcwd() + os.sep + SG.ASSEMBLIES_PATH)
     clr.AddReference(ASSEMBLY_NAME)
@@ -315,13 +316,15 @@ def get_namespaces():
                 if not j.ToString().startswith(tuple(common_asm)):
                     asm_module = j
                     break
-            
-            asm_namespaces = set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])
+            try:
+                asm_namespaces = set([x.FullName.rsplit('.', 1)[0] for x in asm_module.GetTypes() if x.Namespace and x.IsPublic])
+            except:
+                pass
             return asm_namespaces
 
 
 def main(args = None):
-    global ASSEMBLY_NAME
+    global ASSEMBLY_NAME, asm_module, asm_namespaces
 
     # check if .NET platform is present
     if (not clr.IsNetCoreApp):
@@ -375,8 +378,20 @@ if __name__ == '__main__':
         _ret = 0
     except OSError:
         print(f"{SG.dependencies} {ASSEMBLY_NAME} from {SG.ASSEMBLIES_PATH + os.sep + ASSEMBLY_NAME}") # type: ignore
+        _ret = 1
     
     except Exception as e:
-        print(f"{type(e)}:: {e}", file = sys.stderr) # type: ignore
+        print("Exception:")
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print(f"Exception type    :: {type(e)}", file = sys.stderr) # type: ignore
+        print(f"Exception message :: {e}", file = sys.stderr) # type: ignore
+        print(f"On the line       :: {exc_tb.tb_lineno}") # type: ignore
+        print("Stack Trace:")
+        error = traceback.format_exc()
+        stack_trace = error.split('\n')
+        stack_trace[len(stack_trace)-10:len(stack_trace)+1]
+        for st in stack_trace:
+            print(st)
+        _ret = 1
 
     sys.exit(_ret)
